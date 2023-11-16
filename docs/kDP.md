@@ -1,0 +1,36 @@
+## 集合・定数
+
+$P$: 候補パスの集合（length_limitを超えないすべての単純パス） \
+$k$: 選ぶパスの本数 \
+$l_{i}$: パスiの長さ \
+$s_{ij}$: パス$i$とパス$j$の類似度
+
+## 変数
+
+$x_i$: パス$i$を選ぶかどうか \
+$y_{ij}$: パス$i$とパス$j$を同時に選ぶかどうか \
+$\theta$: 選んだパス集合の類似度の合計
+
+## 目的関数
+
+$\min \theta$ - 優先順位1
+
+$\min \sum_{p \in P} l_p x_p$ - 優先順位2
+
+## 制約条件
+
+1. 選ぶパスの本数は$k$本
+
+    $\sum_{p \in P} x_i = \min(k, |P|)$
+
+2. y_ijの表現
+
+    $y_{ij} \leq x_i, \forall i, j \in P, i \neq j$
+
+    $y_{ij} \leq x_j, \forall i, j \in P, i \neq j$
+
+    $y_{ij} \geq x_i + x_j - 1, \forall i, j \in P, i \neq j$
+
+3. 選んだパス集合の類似度の合計
+
+    $\theta = \sum_{i, j \in P, i \neq j} s_{ij} y_{ij}$
