@@ -61,7 +61,8 @@ def plot_algorithm_comparison(
             j += 1
     df_filtered = df_filtered.sort_values('sort_key')
 
-    metrics_to_plot = ['length_ave', 'hop_ave', 'similarity_ave', 'path_num_ave', 'edge_usage_ave', 'edge_usage_std']
+    metrics_to_plot = ['elapsed_time', 'length_ave', 'hop_ave', 'similarity_ave', 
+                       'path_num_ave', 'edge_usage_ave', 'edge_usage_std']
 
     for metric in metrics_to_plot:
         plt.figure(figsize=(10, 5))
