@@ -40,12 +40,12 @@ def create_network(network_name: str) -> nx.Graph:
         
     return G
 
-def path_length(
+def calc_path_length(
     graph: nx.Graph, 
     path: List[int]
     ) -> int:
     """
-    与えられたパスの長さを計算する
+    与えられたパスの長さを計算する関数
     """
     return sum(graph[u][v]['weight'] for u, v in zip(path[:-1], path[1:]))
 
@@ -74,3 +74,15 @@ def path_similarity(
         similarity = common_edges / min(path1_edges, path2_edges)
 
     return similarity
+
+
+def is_edge_in_path(path: List[int], edge: tuple[int, int]) -> bool:
+    """
+    エッジがパスに含まれるかどうかを判定する関数
+    """
+    judge = False
+    for i in range(len(path) - 1):
+        if (path[i], path[i + 1]) == edge or (path[i + 1], path[i]) == edge:
+            judge = True
+
+    return judge

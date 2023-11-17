@@ -6,7 +6,7 @@ import os
 import numpy as np
 import networkx as nx
 import pickle
-from src.utils.graph import create_network, path_length, path_similarity
+from src.utils.graph import create_network, calc_path_length, path_similarity
 from src.utils.paths import RESULT_DIR
 
 def calc_avg_path_len_hops(
@@ -17,7 +17,7 @@ def calc_avg_path_len_hops(
     パスの長さとホップ数の平均を計算する関数
     """
     length_sum = sum(
-        sum([path_length(graph, path) for path in paths[key]]) 
+        sum([calc_path_length(graph, path) for path in paths[key]]) 
         for key in paths.keys()
         )
     hop_sum = sum(

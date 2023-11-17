@@ -9,7 +9,7 @@ from itertools import combinations
 from src.paths.algorithms.base_algorithm import BasePathAlgorithm
 from src.paths.algorithms.k_dissimilar_paths import KDissimilarPaths
 from src.paths.algorithms.k_shortest_paths import KShortestPaths
-from src.utils.graph import path_length, path_similarity
+from src.utils.graph import calc_path_length, path_similarity
 
 
 class KBalancedPath(BasePathAlgorithm):
@@ -53,7 +53,7 @@ class KBalancedPath(BasePathAlgorithm):
 
         # 目的関数
         model.setObjective(
-            quicksum(path_length(self.graph, paths[i]) * x[i] for i in range(len(paths))), 
+            quicksum(calc_path_length(self.graph, paths[i]) * x[i] for i in range(len(paths))), 
             GRB.MINIMIZE
             )
 

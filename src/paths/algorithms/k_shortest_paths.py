@@ -4,7 +4,7 @@ from typing import Tuple, List
 
 import networkx as nx
 from src.paths.algorithms.base_algorithm import BasePathAlgorithm
-from src.utils.graph import path_length, path_similarity
+from src.utils.graph import calc_path_length, path_similarity
 
 
 class KShortestPaths(BasePathAlgorithm):
@@ -19,7 +19,7 @@ class KShortestPaths(BasePathAlgorithm):
         simple_paths = nx.all_simple_paths(
             self.graph, source=source, target=target, cutoff=self.length_limit
         )
-        k_paths = sorted(simple_paths, key=lambda p: path_length(self.graph, p))[:self.path_nums]
+        k_paths = sorted(simple_paths, key=lambda p: calc_path_length(self.graph, p))[:self.path_nums]
 
         similarity_sum = sum(
             path_similarity(self.graph, k_paths[i], k_paths[j])

@@ -6,7 +6,7 @@ import networkx as nx
 from gurobipy import Model, GRB, quicksum
 from itertools import combinations
 from src.paths.algorithms.base_algorithm import BasePathAlgorithm
-from src.utils.graph import path_similarity, path_length
+from src.utils.graph import path_similarity, calc_path_length
 
 
 class KDissimilarPaths(BasePathAlgorithm):
@@ -33,7 +33,7 @@ class KDissimilarPaths(BasePathAlgorithm):
         # 目的関数
         model.setObjectiveN(theta, 0, 1)
         model.setObjectiveN(
-            quicksum(path_length(self.graph, paths[i]) * x[i] for i in range(len(paths))), 1, 0
+            quicksum(calc_path_length(self.graph, paths[i]) * x[i] for i in range(len(paths))), 1, 0
             )
 
         # 制約条件
