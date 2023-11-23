@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from typing import Dict, List, Tuple
-
 import numpy as np
 import networkx as nx
 
@@ -21,15 +19,15 @@ def gen_one_demand_size(
 
 
 def gen_all_demands_offline(
-    generation_principle: str, 
-    G: nx.Graph, 
+    graph: nx.Graph, 
     N_DEMANDS: int, 
-    min_size: int, 
-    max_size: int, 
+    generation_principle: str = 'Random', 
+    min_size: int = 10, 
+    max_size: int = 400, 
     seed: int = None
     ) -> dict:
     """N_DEMANDSの数だけ通信要求を生成する"""
-    nodes = list(G.nodes)
+    nodes = list(graph.nodes)
     demands = {}
 
     if seed is not None:
