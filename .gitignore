@@ -39,6 +39,9 @@ archive/
 # pdf
 .pdf
 
+# txt
+*.txt
+
 # C extensions
 *.so
 
