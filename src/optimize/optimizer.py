@@ -55,7 +55,7 @@ class Optimizer:
         )
         model = Optimizer.make_model(model_input)
         model.solve(self.params.TimeLimit)
-        self.result['params'] = self.params
-        self.result['result'] = model.result
+        self.result['Parameters'] = self.params
+        self.result['OptResult'] = model.result
 
         return self.result
