@@ -21,8 +21,9 @@ class KDissimilarPaths(BasePathAlgorithm):
         model = Model('k_dissimilar_paths')
         model.Params.OutputFlag = 0
         paths = list(nx.all_simple_paths(
-            self.graph, source=source, target=target, cutoff=self.length_limit
+            self.graph, source=source, target=target
             ))
+        paths = [path for path in paths if calc_path_length(self.graph, path) <= self.length_limit]
         path_pairs = list(combinations(range(len(paths)), 2))
 
         # 変数の定義

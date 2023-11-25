@@ -17,8 +17,10 @@ class KShortestPaths(BasePathAlgorithm):
         指定された2点対間のk-Shorest Pathsを求める関数
         """
         simple_paths = nx.all_simple_paths(
-            self.graph, source=source, target=target, cutoff=self.length_limit
+            self.graph, source=source, target=target
         )
+        simple_paths = [path for path in simple_paths 
+                        if calc_path_length(self.graph, path) <= self.length_limit]
         k_paths = sorted(simple_paths, key=lambda p: calc_path_length(self.graph, p))[:self.path_nums]
 
         similarity_sum = sum(

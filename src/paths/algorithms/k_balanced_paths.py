@@ -33,18 +33,12 @@ class KBalancedPath(BasePathAlgorithm):
         """
         k-Balanced PathをILPで解く関数
         """
-        # _, theta_min = KShortestPaths(
-        #     self.graph, self.path_nums, self.length_limit
-        #     ).find_path_pair(source, target)
-        # _, theta_max = KDissimilarPaths(
-        #     self.graph, self.path_nums, self.length_limit
-        #     ).find_path_pair(source, target)
-
         model = Model('k_balanced_paths')
         model.Params.OutputFlag = 0
         paths = list(nx.all_simple_paths(
-            self.graph, source=source, target=target, cutoff=self.length_limit
+            self.graph, source=source, target=target
             ))
+        paths = [path for path in paths if calc_path_length(self.graph, path) <= self.length_limit]
         path_pairs = list(combinations(range(len(paths)), 2))
 
         # 変数の定義
