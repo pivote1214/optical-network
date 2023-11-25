@@ -94,7 +94,8 @@ def _select_modulation_format(path_length: int) -> int:
     elif path_length <= 6300:
         modulation_format = 1
     else:
-        raise ValueError("Path length is too long.")
+        modulation_format = 0.01
+        # raise ValueError("Path length is too long.")
 
     return modulation_format
 
