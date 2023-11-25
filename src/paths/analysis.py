@@ -20,7 +20,7 @@ def make_metrics_table() -> str:
     for file_name in file_names:
         with open(RESULT_DIR / 'paths' / 'pickle' / file_name, 'rb') as f:
             content = pickle.load(f)
-            for key, value in content['basic_info'].items():
+            for key, value in content['parameters'].items():
                 if type(value) == dict:
                     continue
                 metrics_table.loc[file_name, key] = value
@@ -41,18 +41,18 @@ def plot_algorithm_comparison(
     output_path: str
     ) -> None:
     """
-    kDP, kSP, kBPの各アルゴリズムの評価指標を比較するグラフを作成する関数
+    kDP, kSP, kSPwLOの各アルゴリズムの評価指標を比較するグラフを作成する関数
     """
     df_filtered = metrics_df[metrics_df['k'] == k_value]
 
-    # algorithm列がkBPの場合は，f'kBP_{alpha}'の形式に変更する
-    df_filtered.loc[df_filtered['algorithm'] == 'kBP', 'algorithm'] = \
-        df_filtered.loc[df_filtered['algorithm'] == 'kBP', 'algorithm'] + \
-            '_' + df_filtered.loc[df_filtered['algorithm'] == 'kBP', 'alpha'].astype(str)
+    # algorithm列がkSPwLOの場合は，f'kSPwLO_{alpha}'の形式に変更する
+    df_filtered.loc[df_filtered['algorithm'] == 'kSPwLO', 'algorithm'] = \
+        df_filtered.loc[df_filtered['algorithm'] == 'kSPwLO', 'algorithm'] + \
+            '_' + df_filtered.loc[df_filtered['algorithm'] == 'kSPwLO', 'alpha'].astype(str)
 
-    # df_filteredの順をkDP, kBP_0.1,..., kBP_0.9, kSPにする
+    # df_filteredの順をkDP, kSPwLO_0.1,..., kSPwLO_0.9, kSPにする
     sort_permutation = ['kSP'] + \
-        [f'kBP_{round(alpha, 2)}' for alpha in np.arange(0.1, 1.0, 0.1)] + \
+        [f'kSPwLO_{round(alpha, 2)}' for alpha in np.arange(0.1, 1.0, 0.1)] + \
             ['kDP']
     j = 0
     for _, algorithm in enumerate(sort_permutation):

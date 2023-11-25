@@ -2,7 +2,10 @@ from __future__ import annotations
 
 from typing import List
 
+import pickle
 import networkx as nx
+
+from src.utils.paths import GRAPH_DIR
 
 
 # 各グラフの定義
@@ -31,14 +34,22 @@ cr_table_network = {
                     'RING': RING
                     }
 
+def load_network(network_name: str) -> nx.Graph:
+    """load graph from pickle file"""
+    full_path = GRAPH_DIR / f"{network_name}.pickle"
+    with open(full_path, 'rb') as f:
+        graph = pickle.load(f)
+        
+    return graph
+
 def create_network(network_name: str) -> nx.Graph:
     """
     グラフを作成する関数
     """
-    G = nx.Graph()
-    G.add_weighted_edges_from(cr_table_network[network_name])
-        
-    return G
+    graph = nx.Graph()
+    graph.add_weighted_edges_from(cr_table_network[network_name])
+
+    return graph
 
 def calc_path_length(
     graph: nx.Graph, 
@@ -86,3 +97,12 @@ def is_edge_in_path(path: List[int], edge: tuple[int, int]) -> bool:
             judge = True
 
     return judge
+
+
+# graphのpickleファイルの作成
+if __name__ == "__main__":
+    for network_name in cr_table_network.keys():
+        graph = create_network(network_name)
+        full_path = GRAPH_DIR / f"{network_name}.pickle"
+        with open(full_path, 'wb') as f:
+            pickle.dump(graph, f)

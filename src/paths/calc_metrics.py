@@ -1,13 +1,14 @@
 from __future__ import annotations
 
-from typing import Dict, Tuple, List
+from typing import Any, Dict, Tuple, List
 
 import os
 import numpy as np
 import networkx as nx
 import pickle
-from src.utils.graph import create_network, calc_path_length, path_similarity
+from src.utils.graph import calc_path_length, path_similarity
 from src.utils.paths import RESULT_DIR
+
 
 def calc_avg_path_len_hops(
     graph: nx.Graph,
@@ -90,18 +91,11 @@ def calc_edge_usage_metrics(
     return edge_usage
 
 
-def calc_all_metrics(file_name: str) -> None:
-    """
-    パス集合の評価指標を計算し，追加する関数
-    """
-    full_path = RESULT_DIR / 'paths' / file_name
-    with open(full_path, 'rb') as f:
-        content = pickle.load(f)
-
-    network_name = content['basic_info']['network_name']
-    graph = create_network(network_name)
-    paths = content['all_paths']
-
+def calc_all_metrics(
+    graph: nx.Graph, 
+    paths: Dict[Tuple[int, int], List[Tuple[int]]]
+    ) -> Dict[str, Any]:
+    """calculate all metrics"""
     length_ave, hop_ave = calc_avg_path_len_hops(graph, paths)
     similarity_ave = calc_avg_path_sim(graph, paths)
     path_num_ave = calc_avg_path_nums(paths)
@@ -114,20 +108,9 @@ def calc_all_metrics(file_name: str) -> None:
         'hop_ave': hop_ave,
         'similarity_ave': similarity_ave,
         'path_num_ave': path_num_ave, 
-        'edge_usage': edge_usage,
+        'edge_usage': edge_usage, 
         'edge_usage_ave': edge_usage_ave, 
         'edge_usage_std': edge_usage_std
     }
 
-    content['metrics'] = metrics
-
-    with open(full_path, 'wb') as f:
-        pickle.dump(content, f)
-
-    return None
-
-
-if __name__ == '__main__':
-    file_names = os.listdir(RESULT_DIR / 'paths')
-    for file_name in file_names:
-        calc_all_metrics(file_name)
+    return metrics

@@ -1,7 +1,6 @@
 from typing import Dict, List, Tuple, Optional
 
 import time
-import pprint
 import gurobipy as gp
 from dataclasses import dataclass
 from pathlib import Path
@@ -128,17 +127,21 @@ class Model:
         # set model
         self.problem = self._set_model()
         # set time limit
-        self.problem.setParam('TimeLimit', TimeLimit)
         self.problem.setParam('OutputFlag', 0)
+        self.problem.setParam('TimeLimit', TimeLimit)
 
         # solve
         start = time.time()
         self.problem.optimize()
         elapsed_time = time.time() - start
         # store result
-        self.objective = self.problem.ObjVal
-        self.used_slots = self.calculate_used_slots()
-        self.variables_to_value()
+        if self.problem.Status == gp.GRB.INFEASIBLE:
+            self.objective = None
+            self.used_slots = None
+        else:
+            self.objective = self.problem.ObjVal
+            self.used_slots = self.calculate_used_slots()
+            self.variables_to_value()
         self.result = OptResult(
             calculation_time=elapsed_time, 
             objective=self.objective, 
