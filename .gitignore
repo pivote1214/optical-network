@@ -20,6 +20,9 @@ archive/
 # csv
 *.csv
 
+# xlsx
+*.xlsx
+
 # json
 *.json
 
