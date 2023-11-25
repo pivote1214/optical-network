@@ -20,10 +20,11 @@ def make_input(params: Parameter) -> tuple[IndexSet, Constant]:
     S = [s_ind for s_ind in range(params.num_slots)]
     D = gen_all_demands_offline(params.graph, params.num_demands, 
                                 seed=params.demands_seed)
-    all_paths_dir = PATHS_DIR / f"{params.path_algo_name}_{params.network_name}_k={params.k}_alpha={params.alpha}.pickle"
+    all_paths_dir = \
+        PATHS_DIR / params.network_name / f"{params.path_algo_name}_k={params.k}_alpha={params.alpha}.pickle"
     with open(all_paths_dir, mode="rb") as f:
         paths_info = pickle.load(f)
-        all_paths = paths_info["all_paths"]
+        all_paths = paths_info["paths"]
     P = _make_path(D, all_paths)
     C = _make_channels(params, S, D, P)
     index_set = IndexSet(E=E, S=S, D=D, P=P, C=C)

@@ -143,12 +143,10 @@ class Model:
             self.used_slots = self.calculate_used_slots()
             self.variables_to_value()
         self.result = OptResult(
+            status=self.problem.Status, 
             calculation_time=elapsed_time, 
             objective=self.objective, 
             used_slots=self.used_slots, 
-            problem=self.problem, 
-            index_set=self.index_set, 
-            constant=self.constant, 
             variable={'x': self.x, 'y_es': self.y_es, 'y_s': self.y_s}
             )
         if write_lp:

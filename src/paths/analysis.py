@@ -1,35 +1,33 @@
 import os
 import pickle
-import pprint
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-from src.utils.paths import RESULT_DIR
+from src.utils.paths import PATHS_DIR, RESULT_DIR
 
 
 def make_metrics_table() -> str:
-    file_names = os.listdir(RESULT_DIR / 'paths' / 'pickle')
-    file_names = [path for path in file_names if path.endswith('.pickle')]
+    file_names = os.listdir(PATHS_DIR / 'NSF')
     file_names = sorted(file_names)
     metrics_table = pd.DataFrame(index=file_names)
     metrics_table.index.name = 'file_name'
     metrics_table = metrics_table.sort_index()
 
     for file_name in file_names:
-        with open(RESULT_DIR / 'paths' / 'pickle' / file_name, 'rb') as f:
-            content = pickle.load(f)
-            for key, value in content['parameters'].items():
+        with open(PATHS_DIR/ 'NSF' / file_name, 'rb') as f:
+            paths_data = pickle.load(f)
+            for key, value in paths_data['parameters'].items():
                 if type(value) == dict:
                     continue
                 metrics_table.loc[file_name, key] = value
-            for key, value in content['metrics'].items():
+            for key, value in paths_data['metrics'].items():
                 if type(value) == dict:
                     continue
                 metrics_table.loc[file_name, key] = value
 
-    full_table_path = RESULT_DIR / 'paths' / 'metrics_table.csv'
+    full_table_path = RESULT_DIR / 'paths' / 'NSF' / 'metrics_table.csv'
     metrics_table.to_csv(full_table_path)
 
     return full_table_path
@@ -75,8 +73,6 @@ def plot_algorithm_comparison(
         plt.savefig(f'{output_path}_{metric}.png')
         plt.close()
 
-    return None
-
 
 if __name__ == '__main__':
     full_table_path = make_metrics_table()
@@ -84,5 +80,5 @@ if __name__ == '__main__':
     metrics_table = metrics_table.sort_index()
 
     for k in range(1, 6):
-        output_path = RESULT_DIR / 'paths' / 'figures' / f'algorithm_comparison_k={k}'
+        output_path = RESULT_DIR / 'paths' / 'NSF' / 'figures' / f'algorithm_comparison_k={k}'
         plot_algorithm_comparison(metrics_table, k, output_path)

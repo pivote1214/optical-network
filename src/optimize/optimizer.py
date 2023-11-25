@@ -1,7 +1,8 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import TypeVar
+from typing import TypeVar, Any
+import gurobipy as gp
 
 from src.optimize.params import Parameter
 from src.utils.paths import OPT_MODEL_DIR
@@ -42,14 +43,14 @@ class Optimizer:
         return model_input
 
     @staticmethod
-    def make_model(model_input: ModelInput) -> Model:
+    def make_model(model_input: ModelInput) -> gp.Model:
         """Bulid optimization model"""
         module_path = OPT_MODEL_DIR / model_input.model_name / "model.py"
         model_class = get_object_from_module(module_path, "Model")
         model = model_class(index_set=model_input.index_set, constant=model_input.constant)
         return model
 
-    def run(self) -> None:
+    def run(self) -> dict[str, Any]:
         model_input = Optimizer.make_model_input(
             model_name=self.model_name, params=self.params
         )
