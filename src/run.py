@@ -37,16 +37,11 @@ if __name__ == "__main__":
     columns = pd.MultiIndex.from_product([metrics, algo_columns])
     index = pd.MultiIndex.from_product([k_values, [seed * 12 for seed in range(1, 11)]])
     result_table = pd.DataFrame(index=index, columns=columns)
-    # for k in tqdm(k_values):
-    #     for path_algo_name, alpha in tqdm(algo_and_alpha, leave=False):
-    #         sum_used_slots, sum_time = 0, 0
-    #         times = 10
-    #         for seed in tqdm(range(1, 11), leave=False):
-    for k in k_values:
-        for path_algo_name, alpha in algo_and_alpha:
+    for k in tqdm(k_values):
+        for path_algo_name, alpha in tqdm(algo_and_alpha, leave=False):
             sum_used_slots, sum_time = 0, 0
             times = 10
-            for seed in range(1, 11):
+            for seed in tqdm(range(1, 11), leave=False):
                 params = Parameter(
                     network_name=network_name, 
                     graph=graph, 
