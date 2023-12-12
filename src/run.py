@@ -16,10 +16,10 @@ if __name__ == "__main__":
     model_name = 'RSA_PATH_CHANNEL'
     network_name = 'NSF'
     graph = load_network(network_name)
-    num_slots = 275
+    num_slots = 250
     num_demands = 100
     k_values = [2, 3, 5]
-    algo_and_alpha = [('kSP', None), ('kSPwLO', 0.3), ('kSPwLO', 0.5)]
+    algo_and_alpha = [('kSP', None), ('kSPwLO', 0.3)]
 
     # write global config
     with open(RESULT_DIR / f'experiment{experiment_num}/global_config.txt', 'w') as f:
@@ -38,10 +38,8 @@ if __name__ == "__main__":
     index = pd.MultiIndex.from_product([k_values, [seed * 12 for seed in range(1, 11)]])
     result_table = pd.DataFrame(index=index, columns=columns)
     for k in tqdm(k_values):
-        for path_algo_name, alpha in tqdm(algo_and_alpha, leave=False):
-            sum_used_slots, sum_time = 0, 0
-            times = 10
-            for seed in tqdm(range(1, 11), leave=False):
+        for seed in tqdm(range(1, 11), leave=False):
+            for path_algo_name, alpha in tqdm(algo_and_alpha, leave=False):
                 params = Parameter(
                     network_name=network_name, 
                     graph=graph, 
@@ -51,17 +49,11 @@ if __name__ == "__main__":
                     k=k, 
                     path_algo_name=path_algo_name, 
                     alpha=alpha, 
-                    TimeLimit=600
+                    TimeLimit=3600
                     )
                 optimizer = Optimizer(model_name=model_name, params=params)
                 result = optimizer.run()
-                # aggregate results
-                if result['OptResult'].used_slots is None:
-                    times -= 1
-                else:
-                    sum_used_slots += result['OptResult'].used_slots
-                    sum_time += result['OptResult'].calculation_time
-                # save results
+                # record raw data
                 result_table.loc[(k, seed*12), ('used_slots', 
                                  f'{path_algo_name}_{alpha}')] = result['OptResult'].used_slots
                 result_table.loc[(k, seed*12), ('calculation_time',
@@ -79,16 +71,6 @@ if __name__ == "__main__":
                     ) as f:
                     pickle.dump(result, f)
 
-                # record results
-                avg_used_slots = sum_used_slots / times
-                avg_time = sum_time / times
-                # save results
-                result_table.loc[(k, 'average'), 
-                                 ('used_slots', f'{path_algo_name}_{alpha}')
-                                 ] = avg_used_slots
-                result_table.loc[(k, 'average'), 
-                                 ('calculation_time', f'{path_algo_name}_{alpha}')
-                                 ] = avg_time
                 # save result_table
                 result_table.to_csv(
                     RESULT_DIR / f'experiment{experiment_num}/result_table.csv'
