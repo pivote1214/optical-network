@@ -3,13 +3,12 @@ from __future__ import annotations
 from typing import Dict, List
 
 import pickle
-import pprint
 import numpy as np
 
 from src.utils.paths import PATHS_DIR
 from src.utils.graph import calc_path_length, is_edge_in_path
 from src.demands.demands import gen_all_demands_offline
-from src.optimize.models.RSA_PATH_CHANNEL.model import Constant, IndexSet
+from src.optimize.models.RSA_PATH_LIMIT.model import Constant, IndexSet
 from src.optimize.params import Parameter
 
 
@@ -26,13 +25,12 @@ def make_input(params: Parameter) -> tuple[IndexSet, Constant]:
         paths_info = pickle.load(f)
         all_paths = paths_info["paths"]
     P = _make_path(D, all_paths)
-    C = _make_channels(params, S, D, P)
-    index_set = IndexSet(E=E, S=S, D=D, P=P, C=C)
+    n = _make_num_slots(params, S, D, P)
+    index_set = IndexSet(E=E, S=S, D=D, P=P)
 
     # make constant
     delta = _calculate_delta(E, D, P)
-    gamma = _calculate_gamma(S, D, P, C)
-    constant = Constant(delta=delta, gamma=gamma)
+    constant = Constant(num_slots=n, delta=delta, M=len(S))
 
     return index_set, constant
 
@@ -50,7 +48,7 @@ def _make_path(
     return path_set
 
 
-def _make_channels(
+def _make_num_slots(
     params: Parameter, 
     S: List[int], 
     D: Dict[int, tuple[int, int, int]], 
@@ -58,7 +56,7 @@ def _make_channels(
     ) -> tuple[Dict[tuple[int, int], int], Dict[tuple[int, int], List[List[int]]] ]:
     """Generate channel set"""
     max_slot = len(S)
-    channels = {}
+    num_slots = {}
     for d_ind, demand in D.items():
         for p_ind, path in enumerate(P[d_ind]):
             # select modulation format
@@ -67,21 +65,9 @@ def _make_channels(
             # calculate required slots
             required_slots = _calc_required_slots(demand[2], modulation_format, 
                                                   params.W, params.traffic_bpsk)
-            channels[d_ind, p_ind] = _calc_candidate_channel(required_slots, max_slot)
+            num_slots[d_ind, p_ind] = required_slots
 
-    return channels
-
-
-def _calc_candidate_channel(slot_num: int, max_slot: int) -> List[List[int]]:
-    """Calculate candidate channels"""
-    channels = []
-    for i in range(max_slot - slot_num + 1):
-        channel = []
-        for j in range(slot_num):
-            channel.append(i + j)
-        channels.append(channel)
-
-    return channels
+    return num_slots
 
 
 def _select_modulation_format(path_length: int) -> int:
@@ -132,19 +118,3 @@ def _calculate_delta(
                 delta[e_ind, d_ind, p_ind] = is_edge_in_path(path, edge)
 
     return delta
-
-def _calculate_gamma(
-    S: List[int], 
-    D: Dict[int, tuple[int, int, int]], 
-    P: Dict[int, List[List[int]]], 
-    C: Dict[tuple[int, int], List[List[int]]], 
-    ) -> Dict[tuple[int, int, int, int], int]:
-    """calculate gamma (channel contains slice or not)"""
-    gamma = {}
-    for d_ind, _ in D.items():
-        for p_ind, path in enumerate(P[d_ind]):
-            for c_ind, channel in enumerate(C[d_ind, p_ind]):
-                for s_ind, slice in enumerate(S):
-                    gamma[d_ind, p_ind, c_ind, s_ind] = 1 if slice in channel else 0
-
-    return gamma

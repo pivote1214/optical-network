@@ -1,0 +1,130 @@
+from typing import Dict, List, Tuple, Optional
+
+import time
+import gurobipy as gp
+from dataclasses import dataclass
+from pathlib import Path
+
+from src.utils.paths import DATA_DIR
+from src.optimize.result import OptResult
+
+
+@dataclass(frozen=True)
+class PathBoundInput:
+    E:          Dict[int, Tuple[int, int]]
+    S:          List[int]
+    D:          Dict[int, Tuple[int, int, int]]
+    P:          Dict[int, List[List[int]]]
+    num_slots:  Dict[Tuple[int, int], int]
+    delta:      Dict[Tuple[int, int, int], int]
+
+
+# @dataclass(frozen=True)
+# class PathBoundOutput:
+#     lower_bound:        int
+#     upper_bound:        int
+#     caclulation_time:   float
+#     variable:           PathBoundVariable
+
+
+class PathLowerBoundVariable:
+    def __init__(self, input: PathBoundInput, problem: gp.Model):
+        self.input:     PathBoundInput                  = input
+        self.problem:   gp.Model                        = problem
+        self.x:         Dict[Tuple[int, int], gp.Var]   = {}
+        self.F_use:     gp.Var                          = None
+
+        self._set_variable()
+
+    def set_variable(self) -> None:
+        return self.problem
+
+    def _set_variable(self) -> None:
+        # set variables x
+        for d_ind, _ in self.input.D.items():
+            for p_ind, _ in enumerate(self.input.P[d_ind]):
+                self.x[d_ind, p_ind] = self.problem.addVar(
+                    vtype=gp.GRB.BINARY, name=f'x_{d_ind}_{p_ind}'
+                )
+        # set variables F_use
+        self.F_use = self.problem.addVar(
+            vtype=gp.GRB.INTEGER, name=f'F_use'
+        )
+        # update variables
+        self.problem.update()
+
+    def to_values(self) -> None:
+        self.x = {key: var.X for key, var in self.x.items()}
+        self.F_use = self.F_use.X
+
+
+class PathLowerBoundObjectiveFunction:
+    input:      PathBoundInput
+    variable:   PathLowerBoundVariable
+    problem:    gp.Model
+
+    def set_objective_function(self) -> None:
+        self.problem.setObjective(self.variable.F_use, gp.GRB.MINIMIZE)
+        # update objective function
+        self.problem.update()
+
+
+class PathLowerBoundConstraint:
+    input:      PathBoundInput
+    variable:   PathLowerBoundVariable
+    problem:    gp.Model
+
+    def set_constraint(self) -> None:
+        # set nonoverlap constraint
+        for d_ind, _ in self.input.D.items():
+            self.problem.addConstr(
+                gp.quicksum(
+                    self.variable.x[d_ind, p_ind] 
+                    for p_ind, _ in enumerate(self.input.P[d_ind])
+                ) 
+                == 1
+            )
+        # set F_use constraint
+        for e_ind, _ in self.input.E.items():
+            self.problem.addConstr(
+                gp.quicksum(
+                    self.input.delta[e_ind, d_ind, p_ind] * \
+                        self.input.num_slots[d_ind, p_ind] * \
+                            self.variable.x[d_ind, p_ind] 
+                            for d_ind, _ in self.input.D.items() 
+                            for p_ind, _ in enumerate(self.input.P[d_ind])
+                ) 
+                <= self.variable.F_use
+            )
+        # update constraints
+        self.problem.update()
+        
+
+class PathLowerBoundModel(PathLowerBoundObjectiveFunction, PathLowerBoundConstraint):
+    input:      PathBoundInput
+    variable:   PathLowerBoundVariable
+    problem:    gp.Model
+
+    def __init__(self, input: PathBoundInput):
+        self.input  = input
+        self.name   = "PathLowerBound"
+
+    def _set_problem(self) -> None:
+        self.problem = gp.Model(self.name)
+        self.problem.setParam(gp.GRB.Param.OutputFlag, False)
+
+        self.variable = PathLowerBoundVariable(input=self.input, problem=self.problem)
+        self.problem = self.variable.set_variable()
+
+        self.set_objective_function()
+        self.set_constraint()
+
+    def solve(self) -> None:
+        self._set_problem()
+        self.problem.optimize()
+    
+        lower_bound = self.problem.ObjVal
+
+        return lower_bound
+
+        

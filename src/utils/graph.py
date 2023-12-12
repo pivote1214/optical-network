@@ -4,6 +4,7 @@ from typing import List
 
 import pickle
 import networkx as nx
+import matplotlib.pyplot as plt
 
 from src.utils.paths import GRAPH_DIR
 
@@ -26,6 +27,12 @@ N6S9 = [(0, 1, 1000), (0, 2, 1200), (1, 2, 600),
 RING = [(1, 2, 300), (2, 3, 230), (3, 4, 421), (4, 5, 323), 
         (5, 6, 432), (6, 7, 272), (7, 8, 297), (8, 1, 388)]
 
+EURO16 = [(1, 2, 514), (1, 4, 540), (2, 3, 393), (2, 5, 594), (2, 7, 600), 
+          (3, 4, 259), (3, 9, 474), (4, 8, 552), (5, 6, 507), (6, 7, 218), 
+          (6, 10, 327), (7, 9, 271), (8, 9, 592), (8, 12, 381), (9, 11, 456), 
+          (10, 11, 522), (10, 13, 720), (11, 12, 757), (11, 15, 534), 
+          (12, 16, 420), (13, 14, 783), (14, 15, 400), (15, 16, 376)]
+    
 cr_table_network = {
                     'KLI2018': KLI2018,
                     'NSF': NSF, 
@@ -100,9 +107,14 @@ def is_edge_in_path(path: List[int], edge: tuple[int, int]) -> bool:
 
 
 # graphのpickleファイルの作成
-if __name__ == "__main__":
-    for network_name in cr_table_network.keys():
-        graph = create_network(network_name)
-        full_path = GRAPH_DIR / f"{network_name}.pickle"
-        with open(full_path, 'wb') as f:
-            pickle.dump(graph, f)
+# if __name__ == "__main__":
+#     for network_name in cr_table_network.keys():
+#         graph = create_network(network_name)
+#         full_path = GRAPH_DIR / f"{network_name}.pickle"
+#         with open(full_path, 'wb') as f:
+#             pickle.dump(graph, f)
+
+if __name__ == '__main__':
+    graph = load_network('N6S9')
+    nx.draw(graph)
+    plt.show()
