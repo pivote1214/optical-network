@@ -1,54 +1,64 @@
-import time
-import pickle
-from tqdm import tqdm
+import os
 import gurobipy as gp
 import pandas as pd
 
 from src.utils.paths import RESULT_DIR
 from src.optimize.params import Parameter
-from src.optimize.optimizer import Optimizer
+from src.optimize.models.RSA_PATH_CHANNEL import make_input
+from src.optimize.models.RSA_PATH_CHANNEL.upper_bound import PathUpperBoundModel, PathUpperBoundInput
+from src.optimize.models.RSA_PATH_CHANNEL.lower_bound import PathLowerBoundModel
+from src.optimize.models.RSA_PATH_CHANNEL.model import PathChannelModel, PathChannelInput
+
 from src.utils.graph import load_network
 
 if __name__ == "__main__":
     # dummy
     dummy = gp.Model('dummy')
 
-    # set experiment number
+    # experiment number
     experiment_num = str(input('Input experiment number: '))
+
+    # make directory
+    os.makedirs(RESULT_DIR / f'experiment{experiment_num}', exist_ok=True)
 
     # set parameters
     model_name              = 'RSA_PATH_CHANNEL'
     network_name            = 'NSF'
     graph                   = load_network(network_name)
     num_slots               = 320
-    num_demands             = 100
+    num_demands             = 15
     demands_population      = [50, 100, 150, 200]
     demands_seeds_values    = [seed * 12 for seed in range(1, 11)]
-    k_values                = [2, 3, 5]
+    k_values                = [2, 3]
     path_algo_infos         = [('kSP', None), ('kSPwLO', 0.3)]
-    bound_alog              = True
+    bound_algo              = True
     TIMELIMIT               = 3600
 
-    # # write global config
-    # with open(RESULT_DIR / f'experiment{experiment_num}/global_config.txt', 'w') as f:
-    #     f.write(f'global config\n')
-    #     f.write(f'data: {time.ctime()}\n')
-    #     f.write(f'algorithm: {model_name}\n')
-    #     f.write(f'network_name: {network_name}\n')
-    #     f.write(f'num_slots: {num_slots}\n')
-    #     f.write(f'num_demands: {num_demands}\n')
+    # write global config
+    with open(RESULT_DIR / f'experiment{experiment_num}/ global_config.txt', 'w') as f:
+        f.write(f'global config\n')
+        f.write(f'model:                {model_name}\n')
+        f.write(f'network_name:         {network_name}\n')
+        f.write(f'num_slots:            {num_slots}\n')
+        f.write(f'num_demands:          {num_demands}\n')
+        f.write(f'demands_population:   {demands_population}\n')
+        f.write(f'demands_seeds_values: {demands_seeds_values}\n')
+        f.write(f'k_values:             {k_values}\n')
+        f.write(f'path_algo_infos:      {path_algo_infos}\n')
+        f.write(f'bound_algo:           {bound_algo}\n')
+        f.write(f'TIMELIMIT:            {TIMELIMIT}\n')
 
-    # # run
-    # metrics = ['used_slots', 'calculation_time']
-    # algo_columns = ['seed'] + [f'{algo}_{alpha}' for algo, alpha in algo_and_alpha]
-    # # metrics-algo_columnsのmulti-columnを作成
-    # columns = pd.MultiIndex.from_product([metrics, algo_columns])
-    # index = pd.MultiIndex.from_product([k_values, [seed * 12 for seed in range(1, 11)]])
-    # result_table = pd.DataFrame(index=index, columns=columns)
+    # run
+    metrics = ['used_slots', 'calculation_time', 'lower_bound', 'upper_bound']
+    algo_columns = [f'{algo}_{alpha}' for algo, alpha in path_algo_infos]
+    # make multi-column
+    columns = pd.MultiIndex.from_product([metrics, algo_columns])
+    index = pd.MultiIndex.from_product([k_values, demands_seeds_values])
+    result_table = pd.DataFrame(index=index, columns=columns)
     
-    for k in tqdm(k_values):
-        for demands_seeds in tqdm(demands_seeds_values, leave=False):
-            for path_algo_name, alpha in tqdm(path_algo_infos, leave=False):
+    for k in k_values:
+        for demands_seeds in demands_seeds_values:
+            for path_algo_name, alpha in path_algo_infos:
                 # set parameters
                 params = Parameter(
                     network_name=network_name, 
@@ -60,16 +70,67 @@ if __name__ == "__main__":
                     k=k, 
                     path_algo_name=path_algo_name, 
                     alpha=alpha, 
-                    bound_algo=bound_alog, 
+                    bound_algo=bound_algo, 
                     TIMELIMIT=TIMELIMIT
                     )
-                # run
-                optimizer = Optimizer(model_name=model_name, params=params)
-                result = optimizer.run()
-                # save pickle
-                file_name = f'k={k}_path_algo={path_algo_name}_alpha={alpha}_seed={seed}.pickle'
+                # run lower bound model
+                lower_bound_input   = make_input.make_input_lower(params)
+                lower_bound_model   = PathLowerBoundModel(lower_bound_input)
+                lower_bound_output  = lower_bound_model.solve()
                 
-                with open(
-                    RESULT_DIR / f'experiment{experiment_num}/raw_data' / file_name, 'wb'
-                    ) as f:
-                    pickle.dump(result, f)
+                # make upper bound input
+                upper_bound_input = PathUpperBoundInput(
+                    E=lower_bound_input.E, 
+                    S=lower_bound_input.S, 
+                    D=lower_bound_input.D, 
+                    P=lower_bound_input.P, 
+                    num_slots=lower_bound_input.num_slots, 
+                    delta=lower_bound_input.delta, 
+                    x=lower_bound_output.x, 
+                    M=len(lower_bound_input.S)
+                    )
+                # run upper bound model
+                upper_bound_model   = PathUpperBoundModel(upper_bound_input)
+                upper_bound_output  = upper_bound_model.solve()
+
+                # make main model input
+                upper_bound = upper_bound_output.upper_bound
+                S = list(range(upper_bound))
+                C = make_input.make_channels(
+                    S, lower_bound_input.num_slots
+                    )
+                gamma = make_input.calculate_gamma(
+                    lower_bound_input.S, lower_bound_input.D, 
+                    lower_bound_input.P, C
+                    )
+                main_model_input = PathChannelInput(
+                    E=lower_bound_input.E, 
+                    S=S, 
+                    D=lower_bound_input.D, 
+                    P=lower_bound_input.P, 
+                    C=C, 
+                    delta=lower_bound_input.delta, 
+                    gamma=gamma, 
+                    lower_bound=lower_bound_output.lower_bound
+                    )
+                # run main model
+                main_model          = PathChannelModel(main_model_input)
+                main_model_output   = main_model.solve()
+
+                algo_column = f'{path_algo_name}_{alpha}'
+                # write result to result_table
+                result_table.loc[(k, demands_seeds), 
+                                 ('used_slots', algo_column)] = \
+                                     main_model_output.used_slots
+                result_table.loc[(k, demands_seeds), 
+                                 ('calculation_time', algo_column)] = \
+                                     main_model_output.calculation_time
+                result_table.loc[(k, demands_seeds), 
+                                 ('lower_bound', algo_column)] = \
+                                     lower_bound_output.lower_bound
+                result_table.loc[(k, demands_seeds), 
+                                 ('upper_bound', algo_column)] = \
+                                     upper_bound_output.upper_bound
+
+                # save result_table
+                result_table.to_csv(RESULT_DIR / f'experiment{experiment_num}' / 'result_table.csv')
