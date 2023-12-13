@@ -11,139 +11,180 @@ from src.optimize.result import OptResult
 
 @dataclass(frozen=True)
 class PathChannelInput:
-    E:      Dict[int, Tuple[int, int]]
-    S:      List[int]
-    D:      Dict[int, Tuple[int, int, int]]
-    P:      Dict[int, List[List[int]]]
-    C:      Dict[Tuple[int, int], List[List[int]]]
-    delta:  Dict[Tuple[int, int, int], int]
-    gamma:  Dict[Tuple[int, int, int, int], int]
+    E:              Dict[int, Tuple[int, int]]
+    S:              List[int]
+    D:              Dict[int, Tuple[int, int, int]]
+    P:              Dict[int, List[List[int]]]
+    C:              Dict[Tuple[int, int], List[List[int]]]
+    delta:          Dict[Tuple[int, int, int], int]
+    gamma:          Dict[Tuple[int, int, int, int], int]
+    lower_bound:    int = None
 
 
-class Model:
-    def __init__(self, index_set: IndexSet, constant: Constant):
-        self.index_set = index_set
-        self.constant = constant
-        self.name = 'RSA_PATH_CHANNEL'
-        self.result = None
-        self.calculation_time = None
-        self.objective = None
+class PathChannelOutput:
+    calculation_time:   float
+    objective:          Optional[float]
+    used_slots:         Optional[int]
+    x:                  Dict[Tuple[int, int, int], int]
+    y_es:               Dict[Tuple[int, int], int]
+    y_s:                Dict[int, int]
 
-    def _set_model(self) -> gp.Model:
-        problem = gp.Model(self.name)
-        # set variables
-        self.x, self.y_es, self.y_s = {}, {}, {}
+class PathChannelVariable:
+    def __init__(self, input: PathChannelInput, problem: gp.Model):
+        self.input:     PathChannelInput                    = input
+        self.problem:   gp.Model                            = problem
+        self.x:         Dict[Tuple[int, int, int], gp.Var]  = {}
+        self.y_es:      Dict[Tuple[int, int], gp.Var]       = {}
+        self.y_s:       Dict[int, gp.Var]                   = {}
+
+        self._set_variable()
+
+    def set_variable(self) -> None:
+        return self.problem
+
+    def _set_variable(self) -> None:
         # set variables x
-        for d_ind, _ in self.index_set.D.items():
-            for p_ind, _ in enumerate(self.index_set.P[d_ind]):
-                for c_ind, _ in enumerate(self.index_set.C[d_ind, p_ind]):
-                    self.x[d_ind, p_ind, c_ind] = problem.addVar(
+        for d_ind, _ in self.input.D.items():
+            for p_ind, _ in enumerate(self.input.P[d_ind]):
+                for c_ind, _ in enumerate(self.input.C[d_ind, p_ind]):
+                    self.x[d_ind, p_ind, c_ind] = self.problem.addVar(
                         vtype=gp.GRB.BINARY, name=f'x_{d_ind}_{p_ind}_{c_ind}'
                     )
         # set variables y_es
-        for e_ind, _ in self.index_set.E.items():
-            for s_ind, _ in enumerate(self.index_set.S):
-                self.y_es[e_ind, s_ind] = problem.addVar(
+        for e_ind, _ in self.input.E.items():
+            for s_ind, _ in enumerate(self.input.S):
+                self.y_es[e_ind, s_ind] = self.problem.addVar(
                     vtype=gp.GRB.BINARY, name=f'y_es_{e_ind}_{s_ind}'
                 )
         # set variables y_s
-        for s_ind, _ in enumerate(self.index_set.S):
-            self.y_s[s_ind] = problem.addVar(
+        for s_ind, _ in enumerate(self.input.S):
+            self.y_s[s_ind] = self.problem.addVar(
                 vtype=gp.GRB.BINARY, name=f'y_s_{s_ind}'
             )
         # update variables
-        problem.update()
+        self.problem.update()
 
-        # set objective function
-        problem.setObjective(
-            gp.quicksum(self.y_s[s_ind] * s_ind for s_ind in self.index_set.S), gp.GRB.MINIMIZE
-            # gp.quicksum(self.y_s[s_ind] for s_ind in self.index_set.S), gp.GRB.MINIMIZE
+    def to_values(self) -> None:
+        self.x      = {key: var.X for key, var in self.x.items()}
+        self.y_es   = {key: var.X for key, var in self.y_es.items()}
+        self.y_s    = {key: var.X for key, var in self.y_s.items()}
+
+
+class PathChannelObjectiveFunction:
+    input:      PathChannelInput
+    variable:   PathChannelVariable
+    problem:    gp.Model
+
+    def set_objective_function(self) -> None:
+        self.problem.setObjective(
+            gp.quicksum(self.variable.y_s[s_ind] * s_ind for s_ind in self.input.S), 
+            gp.GRB.MINIMIZE
         )
-        # update objective function
-        problem.update()
+        self.problem.update()
 
-        # set constraints
+
+class PathChannelConstraint:
+    input:      PathChannelInput
+    variable:   PathChannelVariable
+    problem:    gp.Model
+
+    def set_constraint(self) -> None:
         # set nonoverlap constraint
-        for d_ind, _ in self.index_set.D.items():
-            problem.addConstr(
+        for d_ind, _ in self.input.D.items():
+            self.problem.addConstr(
                 gp.quicksum(
-                    self.x[d_ind, p_ind, c_ind] 
-                    for p_ind, _ in enumerate(self.index_set.P[d_ind]) 
-                    for c_ind, _ in enumerate(self.index_set.C[d_ind, p_ind])
+                    self.variable.x[d_ind, p_ind, c_ind] 
+                    for p_ind, _ in enumerate(self.input.P[d_ind]) 
+                    for c_ind, _ in enumerate(self.input.C[d_ind, p_ind])
                 ) 
                 == 1
             )
         # set y_es constraint
-        for e_ind, _ in self.index_set.E.items():
-            for s_ind, _ in enumerate(self.index_set.S):
-                problem.addConstr(
+        for e_ind, _ in self.input.E.items():
+            for s_ind, _ in enumerate(self.input.S):
+                self.problem.addConstr(
                     gp.quicksum(
-                        self.x[d_ind, p_ind, c_ind] * \
-                            self.constant.gamma[d_ind, p_ind, c_ind, s_ind] * \
-                                self.constant.delta[e_ind, d_ind, p_ind]
-                            for d_ind, _ in self.index_set.D.items() 
-                            for p_ind, _ in enumerate(self.index_set.P[d_ind]) 
-                            for c_ind, _ in enumerate(self.index_set.C[d_ind, p_ind])
+                        self.variable.x[d_ind, p_ind, c_ind] * \
+                            self.input.gamma[d_ind, p_ind, c_ind, s_ind] * \
+                                self.input.delta[e_ind, d_ind, p_ind]
+                            for d_ind, _ in self.input.D.items() 
+                            for p_ind, _ in enumerate(self.input.P[d_ind]) 
+                            for c_ind, _ in enumerate(self.input.C[d_ind, p_ind])
                     ) 
-                    <= self.y_es[e_ind, s_ind]
+                    <= self.variable.y_es[e_ind, s_ind]
                 )
         # set y_s constraint
-        for s_ind, _ in enumerate(self.index_set.S):
-            problem.addConstr(
+        for s_ind, _ in enumerate(self.input.S):
+            self.problem.addConstr(
                 gp.quicksum(
-                    self.y_es[e_ind, s_ind] 
-                    for e_ind, _ in self.index_set.E.items()
+                    self.variable.y_es[e_ind, s_ind] 
+                    for e_ind, _ in self.input.E.items()
                 ) 
-                <= len(self.index_set.E) * self.y_s[s_ind]
+                <= len(self.input.E) * self.variable.y_s[s_ind]
+            )
+        # set lower bound constraint
+        if self.input.lower_bound is not None:
+            self.problem.addConstr(
+                gp.quicksum(
+                    self.variable.y_s[s_ind]
+                    for s_ind, _ in enumerate(self.input.S)
+                ) 
+                >= self.input.lower_bound
             )
         # update constraints
-        problem.update()
+        self.problem.update()
 
-        return problem
+class PathChannelModel(PathChannelObjectiveFunction, PathChannelConstraint):
+    input:      PathChannelInput
+    variable:   PathChannelVariable
+    problem:    gp.Model
+    
+    def __init__(self, input: PathChannelInput):
+        self.input  = input
+        self.name   = "RSA/Path/Channel"
 
-    def variables_to_value(self) -> None:
-        self.x = {key: var.X for key, var in self.x.items()}
-        self.y_es = {key: var.X for key, var in self.y_es.items()}
-        self.y_s = {key: var.X for key, var in self.y_s.items()}
+    def _set_problem(self) -> None:
+        self.problem = gp.Model(self.name)
+        self.problem.setParam('OutputFlag', 0)
+
+        self.variable = PathChannelVariable(input=self.input, problem=self.problem)
+        self.problem = self.variable.set_variable()
+        
+        self.set_objective_function()
+        self.set_constraint()
 
     def calculate_used_slots(self) -> int:
         used_slots = 0
-        for s_ind, _ in enumerate(self.index_set.S):
-            used_slots += self.y_s[s_ind].X
+        for s_ind, _ in enumerate(self.input.S):
+            used_slots += self.variable.y_s[s_ind]
         return used_slots
-    
-    def write_lp(self, dir_path: Optional[Path] = DATA_DIR / 'output' / 'lpfile') -> None:
-        self.problem.write_lp(str(dir_path / f'{self.name}.lp'))
 
-    def solve(
-        self, 
-        TIMELIMIT: Optional[int] = 3600, 
-        write_lp: bool = False
-        ) -> None:
+    def solve(self) -> None:
         # set model
-        self.problem = self._set_model()
-        # set time limit
-        self.problem.setParam('OutputFlag', 0)
-        self.problem.setParam('TIMELIMIT', TIMELIMIT)
+        self._set_problem()
 
         # solve
         start = time.time()
         self.problem.optimize()
         elapsed_time = time.time() - start
+        
         # store result
         if self.problem.Status == gp.GRB.INFEASIBLE:
             self.objective = None
             self.used_slots = None
         else:
             self.objective = self.problem.ObjVal
+            self.variable.to_values()
             self.used_slots = self.calculate_used_slots()
-            self.variables_to_value()
-        self.result = OptResult(
-            status=self.problem.Status, 
+
+        # save result
+        self.output = PathChannelOutput(
             calculation_time=elapsed_time, 
             objective=self.objective, 
             used_slots=self.used_slots, 
-            variable={'x': self.x, 'y_es': self.y_es, 'y_s': self.y_s}
-            )
-        if write_lp:
-            self.write_lp()
+            x=self.variable.x, 
+            y_es=self.variable.y_es, 
+            y_s=self.variable.y_s
+        )
+
+        return self.output
