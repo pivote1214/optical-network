@@ -38,7 +38,8 @@ cr_table_network = {
                     'NSF': NSF, 
                     'N6': N6, 
                     'N6S9': N6S9, 
-                    'RING': RING
+                    'RING': RING, 
+                    'EURO16': EURO16
                     }
 
 def load_network(network_name: str) -> nx.Graph:
@@ -102,6 +103,22 @@ def is_edge_in_path(path: List[int], edge: tuple[int, int]) -> bool:
     for i in range(len(path) - 1):
         if (path[i], path[i + 1]) == edge or (path[i + 1], path[i]) == edge:
             judge = True
+
+    return judge
+
+
+def judge_common_edges(path1: List[int], path2: List[int]) -> bool:
+    """
+    2つのパスに共通するエッジがあるかどうかを判定する関数
+    """
+    judge = False
+    for i in range(len(path1) - 1):
+        for j in range(len(path2) - 1):
+            if (path1[i], path1[i + 1]) == (path2[j], path2[j + 1]) or \
+               (path1[i], path1[i + 1]) == (path2[j + 1], path2[j]) or \
+               (path1[i + 1], path1[i]) == (path2[j], path2[j + 1]) or \
+               (path1[i + 1], path1[i]) == (path2[j + 1], path2[j]):
+                judge = True
 
     return judge
 
