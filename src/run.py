@@ -12,14 +12,18 @@ from src.utils.graph import load_network
 if __name__ == "__main__":
     # dummy
     dummy = gp.Model('dummy')
+
+    # set experiment number
     experiment_num = str(input('Input experiment number: '))
-    model_name = 'RSA_PATH_CHANNEL'
-    network_name = 'NSF'
-    graph = load_network(network_name)
-    num_slots = 250
-    num_demands = 100
-    k_values = [2, 3, 5]
-    algo_and_alpha = [('kSP', None), ('kSPwLO', 0.3)]
+
+    # set parameters
+    model_name      = 'RSA_PATH_CHANNEL'
+    network_name    = 'NSF'
+    graph           = load_network(network_name)
+    num_slots       = 320
+    num_demands     = 100
+    k_values        = [2, 3, 5]
+    algo_and_alpha  = [('kSP', None), ('kSPwLO', 0.3)]
 
     # write global config
     with open(RESULT_DIR / f'experiment{experiment_num}/global_config.txt', 'w') as f:
