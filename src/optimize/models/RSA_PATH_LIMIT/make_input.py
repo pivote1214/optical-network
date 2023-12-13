@@ -8,7 +8,7 @@ import numpy as np
 from src.utils.paths import PATHS_DIR
 from src.utils.graph import calc_path_length, is_edge_in_path
 from src.demands.demands import gen_all_demands_offline
-from src.optimize.models.RSA_PATH_LIMIT.model import Constant, IndexSet
+from src.optimize.models.RSA_PATH_LIMIT.lower_bound import Constant, IndexSet
 from src.optimize.params import Parameter
 
 
@@ -93,13 +93,12 @@ def _calc_required_slots(
     traffic_bpsk: float
     ) -> int:
     """Calculate required slots"""
-    # required_slots = np.ceil(
-    #     np.ceil(
-    #         (demand_size / (modulation_format * traffic_bpsk)) * \
-    #         W['OC'] + 2 * W['GB']
-    #         ) / W['FS']
-    #         )
-    required_slots = np.ceil(demand_size / (modulation_format * traffic_bpsk)) * 3 + 1
+    required_slots = np.ceil(
+        (np.ceil(
+            (demand_size / (modulation_format * traffic_bpsk))
+            ) * W['OC'] + 2 * W['GB']
+         ) / W['FS']
+        )
     required_slots = int(required_slots)
 
     return required_slots

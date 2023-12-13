@@ -1,35 +1,29 @@
-from typing import Dict, List, Tuple, Optional
+from typing import Dict, List, Tuple
 
 import time
 import gurobipy as gp
 from dataclasses import dataclass
-from pathlib import Path
-
-from src.utils.paths import DATA_DIR
-from src.optimize.result import OptResult
 
 
 @dataclass(frozen=True)
-class PathBoundInput:
+class PathLowerBoundInput:
     E:          Dict[int, Tuple[int, int]]
-    S:          List[int]
     D:          Dict[int, Tuple[int, int, int]]
     P:          Dict[int, List[List[int]]]
     num_slots:  Dict[Tuple[int, int], int]
     delta:      Dict[Tuple[int, int, int], int]
 
 
-# @dataclass(frozen=True)
-# class PathBoundOutput:
-#     lower_bound:        int
-#     upper_bound:        int
-#     caclulation_time:   float
-#     variable:           PathBoundVariable
+@dataclass(frozen=True)
+class PathLowerBoundOutput:
+    calculation_time:   float
+    lower_bound:        int
+    x:                  Dict[Tuple[int, int], int]
 
 
 class PathLowerBoundVariable:
-    def __init__(self, input: PathBoundInput, problem: gp.Model):
-        self.input:     PathBoundInput                  = input
+    def __init__(self, input: PathLowerBoundInput, problem: gp.Model):
+        self.input:     PathLowerBoundInput             = input
         self.problem:   gp.Model                        = problem
         self.x:         Dict[Tuple[int, int], gp.Var]   = {}
         self.F_use:     gp.Var                          = None
@@ -59,7 +53,7 @@ class PathLowerBoundVariable:
 
 
 class PathLowerBoundObjectiveFunction:
-    input:      PathBoundInput
+    input:      PathLowerBoundInput
     variable:   PathLowerBoundVariable
     problem:    gp.Model
 
@@ -70,7 +64,7 @@ class PathLowerBoundObjectiveFunction:
 
 
 class PathLowerBoundConstraint:
-    input:      PathBoundInput
+    input:      PathLowerBoundInput
     variable:   PathLowerBoundVariable
     problem:    gp.Model
 
@@ -101,11 +95,11 @@ class PathLowerBoundConstraint:
         
 
 class PathLowerBoundModel(PathLowerBoundObjectiveFunction, PathLowerBoundConstraint):
-    input:      PathBoundInput
+    input:      PathLowerBoundInput
     variable:   PathLowerBoundVariable
     problem:    gp.Model
 
-    def __init__(self, input: PathBoundInput):
+    def __init__(self, input: PathLowerBoundInput):
         self.input  = input
         self.name   = "PathLowerBound"
 
@@ -121,10 +115,22 @@ class PathLowerBoundModel(PathLowerBoundObjectiveFunction, PathLowerBoundConstra
 
     def solve(self) -> None:
         self._set_problem()
+        # start optimization
+        start = time.time()
         self.problem.optimize()
-    
-        lower_bound = self.problem.ObjVal
+        caculation_time = time.time() - start
 
-        return lower_bound
+        self.variable.to_values()
+        lower_bound = int(self.variable.F_use)
+        x = self.variable.x
+
+        # save result
+        self.output = PathLowerBoundOutput(
+            calculation_time=caculation_time,
+            lower_bound=lower_bound,
+            x=x
+        )
+
+        return self.output
 
         
