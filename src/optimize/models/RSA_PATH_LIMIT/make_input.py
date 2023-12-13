@@ -6,33 +6,33 @@ import pickle
 import numpy as np
 
 from src.utils.paths import PATHS_DIR
+from src.optimize.params import Parameter
+from src.optimize.models.RSA_PATH_LIMIT.lower_bound import PathLowerBoundInput
+from src.optimize.models.RSA_PATH_LIMIT.upper_bound import PathUpperBoundInput
 from src.utils.graph import calc_path_length, is_edge_in_path
 from src.demands.demands import gen_all_demands_offline
-from src.optimize.models.RSA_PATH_LIMIT.lower_bound import Constant, IndexSet
-from src.optimize.params import Parameter
 
 
-def make_input(params: Parameter) -> tuple[IndexSet, Constant]:
-    """Generate index set and constant"""
-    # make index set
+def make_input_lower(params: Parameter) -> PathLowerBoundInput:
+    """Generate input for lower bound model"""
+    # make edge, slot and demand
     E = {e_ind: edge for e_ind, edge in enumerate(params.graph.edges)}
-    S = [s_ind for s_ind in range(params.num_slots)]
     D = gen_all_demands_offline(params.graph, params.num_demands, 
+                                demands_population=params.demands_population, 
                                 seed=params.demands_seed)
+    # load all paths
     all_paths_dir = \
         PATHS_DIR / params.network_name / f"{params.path_algo_name}_k={params.k}_alpha={params.alpha}.pickle"
     with open(all_paths_dir, mode="rb") as f:
         paths_info = pickle.load(f)
         all_paths = paths_info["paths"]
-    P = _make_path(D, all_paths)
-    n = _make_num_slots(params, S, D, P)
-    index_set = IndexSet(E=E, S=S, D=D, P=P)
+    # make path, num_slots, channel and delta
+    P           = _make_path(D, all_paths)
+    num_slots   = _make_num_slots(params, D, P)
+    delta       = _calculate_delta(E, D, P)
+    input       = PathLowerBoundInput(E=E, D=D, P=P, num_slots=num_slots, delta=delta)
 
-    # make constant
-    delta = _calculate_delta(E, D, P)
-    constant = Constant(num_slots=n, delta=delta, M=len(S))
-
-    return index_set, constant
+    return input
 
 
 def _make_path(
@@ -50,12 +50,10 @@ def _make_path(
 
 def _make_num_slots(
     params: Parameter, 
-    S: List[int], 
     D: Dict[int, tuple[int, int, int]], 
     P: Dict[int, List[List[int]]]
     ) -> tuple[Dict[tuple[int, int], int], Dict[tuple[int, int], List[List[int]]] ]:
     """Generate channel set"""
-    max_slot = len(S)
     num_slots = {}
     for d_ind, demand in D.items():
         for p_ind, path in enumerate(P[d_ind]):
