@@ -6,6 +6,7 @@
 
 % math settings
 \usepackage{amsmath}
+\usepackage[nocomma]{optidef}
 
 % table settings
 \usepackage{tabularray}
@@ -26,7 +27,7 @@
 
 \subsection{集合・定数}
 
-\begin{tabular}{ll}
+\begin{tblr}{ll}
   symbol                  & meaning \\
   \hline
   $ E $                   & リンクの集合 \\
@@ -38,11 +39,11 @@
   $ C^d_p $               & 通信要求 $ d \in D $ に $ p \in P^d $ 割り当てる際の候補チャネルの集合 \\
   $ \delta^d_{e, p} $     & 通信要求 $ d \in D $ の候補パス $ p \in P^d $ にリンク $ e \in E $ が含まれる場合1 \\
   $ \gamma^d_{s, c, p} $  & 通信要求 $ d \in D $ の候補パス $ p \in P^d $、チャネル $ c \in C^d_p $ にスライス $ s \in S $ が含まれる場合1 \\
-\end{tabular}
+\end{tblr}
 
 \subsection{実験パラメータ}
 
-\begin{tabular}{llc}
+\begin{tblr}{llc}
   name                & type      & related parameter \\
   \hline
   network\_name       & str       & $ E $ \\
@@ -55,18 +56,31 @@
   path\_algo\_name    & str       & $ P^d $ \\
   alpha:              & float     & $ P^d $ \\
   bound\_algo         & bool      & - \\
-  TIMELIMIT:          & int       & - \\
-  W:                  & dict      & $ n^d_p $ \\
-  traffic\_bpsk:      & float     & $ n^d_p $ \\
-\end{tabular}
+  TIMELIMIT           & int       & - \\
+  W                   & dict      & $ n^d_p $ \\
+  TRAFFIC\_BPSK       & float     & $ n^d_p $ \\
+\end{tblr}
 
 \section{下限値の計算モデル}
 
 \subsection{変数}
 
-
+\begin{tblr}{lll}
+  variable    & type    & meaning \\
+  \hline
+  $ x^d_p $   & BINARY  & 通信要求 $ d \in D $ にパス $ p \in P^d $ を割り当てる場合1 \\
+  $ F_{use} $   & INTEGER & 各辺の使用スロット数の総和の最大値
+\end{tblr}
 
 \subsection{定式化}
+
+\begin{mini}
+  {} % 決定変数
+  {F_{use}} % 目的関数
+  {\label{lower-bound-model}} % 問題のラベル
+  {} % minの左側
+  \addConstraint{\sum_{p \in P^d} x^d_p}{= 1}, \quad \forall d \in D
+\end{mini}
 
 \section{上限値の計算モデル}
 
