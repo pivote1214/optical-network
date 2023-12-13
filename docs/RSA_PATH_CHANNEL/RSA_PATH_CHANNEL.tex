@@ -1,0 +1,80 @@
+\documentclass{jlreq}
+
+% font settings
+\usepackage[hiragino-pro]{luatexja-preset}
+\usepackage{newpxtext, newpxmath}
+
+% math settings
+\usepackage{amsmath}
+
+% table settings
+\usepackage{tabularray}
+
+
+% title
+\title{RSA/Path/Channel ILP定式化}
+\author{森 勇太}
+\date{\today}
+
+% document
+\begin{document}
+
+\maketitle
+
+\section{モデルの入力}
+
+\subsection{集合・定数}
+
+\begin{tabular}{ll}
+  symbol                  & meaning \\
+  \hline
+  $ E $                   & リンクの集合 \\
+  $ S $                   & 周波数スロットの集合 \\
+  $ D $                   & 通信要求の集合 \\
+  $ M $                   & 変調方式の集合 \\
+  $ P^d $                 & 通信要求 $ d \in D $ に対するパスの集合 \\
+  $ n^d_p $               & 通信要求 $ d \in D $ に $ p \in P^d $ 割り当てる際の必要なスロット数 \\
+  $ C^d_p $               & 通信要求 $ d \in D $ に $ p \in P^d $ 割り当てる際の候補チャネルの集合 \\
+  $ \delta^d_{e, p} $     & 通信要求 $ d \in D $ の候補パス $ p \in P^d $ にリンク $ e \in E $ が含まれる場合1 \\
+  $ \gamma^d_{s, c, p} $  & 通信要求 $ d \in D $ の候補パス $ p \in P^d $、チャネル $ c \in C^d_p $ にスライス $ s \in S $ が含まれる場合1 \\
+\end{tabular}
+
+\subsection{実験パラメータ}
+
+\begin{tabular}{llc}
+  name                & type      & related parameter \\
+  \hline
+  network\_name       & str       & $ E $ \\
+  graph               & nx.Graph  & $ E $ \\
+  num\_slots          & int       & $ S $ \\
+  num\_demands        & int       & $ D $ \\
+  demands\_population & list      & $ D $ \\
+  k                   & int       & $ P^d $ \\
+  path\_algo\_name    & str       & $ P^d $ \\
+  alpha:              & float     & $ P^d $ \\
+  TimeLimit:          & int       & - \\
+  W:                  & dict      & $ n^d_p $ \\
+  traffic\_bpsk:      & float     & $ n^d_p $ \\
+\end{tabular}
+
+\section{下限値の計算モデル}
+
+\subsection{変数}
+
+
+
+\subsection{定式化}
+
+\section{上限値の計算モデル}
+
+\subsection{変数}
+
+\subsection{定式化}
+
+\section{Path/ChannelのILPモデル}
+
+\subsection{変数}
+
+\subsection{定式化}
+
+\end{document}
