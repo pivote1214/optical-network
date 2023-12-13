@@ -17,6 +17,7 @@ def make_input_lower(params: Parameter) -> PathLowerBoundInput:
     """Generate input for lower bound model"""
     # make edge, slot and demand
     E = {e_ind: edge for e_ind, edge in enumerate(params.graph.edges)}
+    S = list(range(params.num_slots))
     D = gen_all_demands_offline(params.graph, params.num_demands, 
                                 demands_population=params.demands_population, 
                                 seed=params.demands_seed)
@@ -30,7 +31,8 @@ def make_input_lower(params: Parameter) -> PathLowerBoundInput:
     P           = _make_path(D, all_paths)
     num_slots   = _make_num_slots(params, D, P)
     delta       = _calculate_delta(E, D, P)
-    input       = PathLowerBoundInput(E=E, D=D, P=P, num_slots=num_slots, delta=delta)
+    input       = PathLowerBoundInput(E=E, S=S, D=D, P=P, 
+                                      num_slots=num_slots, delta=delta)
 
     return input
 
@@ -62,7 +64,7 @@ def _make_num_slots(
             modulation_format = _select_modulation_format(path_length)
             # calculate required slots
             required_slots = _calc_required_slots(demand[2], modulation_format, 
-                                                  params.W, params.traffic_bpsk)
+                                                  params.W, params.TRAFFIC_BPSK)
             num_slots[d_ind, p_ind] = required_slots
 
     return num_slots
@@ -88,12 +90,12 @@ def _calc_required_slots(
     demand_size: float, 
     modulation_format: int, 
     W: dict[str, float], 
-    traffic_bpsk: float
+    TRAFFIC_BPSK: float
     ) -> int:
     """Calculate required slots"""
     required_slots = np.ceil(
         (np.ceil(
-            (demand_size / (modulation_format * traffic_bpsk))
+            (demand_size / (modulation_format * TRAFFIC_BPSK))
             ) * W['OC'] + 2 * W['GB']
          ) / W['FS']
         )

@@ -66,7 +66,7 @@ def _make_channels(
             modulation_format = _select_modulation_format(path_length)
             # calculate required slots
             required_slots = _calc_required_slots(demand[2], modulation_format, 
-                                                  params.W, params.traffic_bpsk)
+                                                  params.W, params.TRAFFIC_BPSK)
             channels[d_ind, p_ind] = _calc_candidate_channel(required_slots, max_slot)
 
     return channels
@@ -104,16 +104,15 @@ def _calc_required_slots(
     demand_size: float, 
     modulation_format: int, 
     W: dict[str, float], 
-    traffic_bpsk: float
+    TRAFFIC_BPSK: float
     ) -> int:
     """Calculate required slots"""
-    # required_slots = np.ceil(
-    #     np.ceil(
-    #         (demand_size / (modulation_format * traffic_bpsk)) * \
-    #         W['OC'] + 2 * W['GB']
-    #         ) / W['FS']
-    #         )
-    required_slots = np.ceil(demand_size / (modulation_format * traffic_bpsk)) * 3 + 1
+    required_slots = np.ceil(
+        (np.ceil(
+            (demand_size / (modulation_format * TRAFFIC_BPSK))
+            ) * W['OC'] + 2 * W['GB']
+         ) / W['FS']
+        )
     required_slots = int(required_slots)
 
     return required_slots

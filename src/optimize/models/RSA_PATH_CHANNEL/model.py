@@ -10,18 +10,14 @@ from src.optimize.result import OptResult
 
 
 @dataclass(frozen=True)
-class IndexSet:
-    E: Dict[int, Tuple[int, int]]
-    S: List[int]
-    D: Dict[int, Tuple[int, int, int]]
-    P: Dict[int, List[List[int]]]
-    C: Dict[Tuple[int, int], List[List[int]]]
-
-
-@dataclass(frozen=True)
-class Constant:
-    delta: Dict[Tuple[int, int, int], int]
-    gamma: Dict[Tuple[int, int, int, int], int]
+class PathChannelInput:
+    E:      Dict[int, Tuple[int, int]]
+    S:      List[int]
+    D:      Dict[int, Tuple[int, int, int]]
+    P:      Dict[int, List[List[int]]]
+    C:      Dict[Tuple[int, int], List[List[int]]]
+    delta:  Dict[Tuple[int, int, int], int]
+    gamma:  Dict[Tuple[int, int, int, int], int]
 
 
 class Model:
@@ -121,14 +117,14 @@ class Model:
 
     def solve(
         self, 
-        TimeLimit: Optional[int] = 3600, 
+        TIMELIMIT: Optional[int] = 3600, 
         write_lp: bool = False
         ) -> None:
         # set model
         self.problem = self._set_model()
         # set time limit
         self.problem.setParam('OutputFlag', 0)
-        self.problem.setParam('TimeLimit', TimeLimit)
+        self.problem.setParam('TIMELIMIT', TIMELIMIT)
 
         # solve
         start = time.time()

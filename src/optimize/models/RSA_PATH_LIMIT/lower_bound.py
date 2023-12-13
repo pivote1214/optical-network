@@ -8,6 +8,7 @@ from dataclasses import dataclass
 @dataclass(frozen=True)
 class PathLowerBoundInput:
     E:          Dict[int, Tuple[int, int]]
+    S:          List[int]
     D:          Dict[int, Tuple[int, int, int]]
     P:          Dict[int, List[List[int]]]
     num_slots:  Dict[Tuple[int, int], int]
@@ -113,7 +114,7 @@ class PathLowerBoundModel(PathLowerBoundObjectiveFunction, PathLowerBoundConstra
         self.set_objective_function()
         self.set_constraint()
 
-    def solve(self) -> None:
+    def solve(self) -> PathLowerBoundOutput:
         self._set_problem()
         # start optimization
         start = time.time()

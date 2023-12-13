@@ -16,7 +16,7 @@ class PathUpperBoundInput:
     num_slots:  Dict[Tuple[int, int], int]
     delta:      Dict[Tuple[int, int, int], int]
     x:          Dict[Tuple[int, int], int]
-    M:          int = len(S)
+    M:          int
 
 
 @dataclass(frozen=True)
@@ -130,7 +130,7 @@ class PathUpperBoundModel(PathUpperBoundObjectiveFunction, PathUpperBoundConstra
         self.set_objective_function()
         self.set_constraint()
 
-    def solve(self) -> None:
+    def solve(self) -> PathUpperBoundInput:
         self._set_problem()
         # start optimization
         start = time.time()
