@@ -109,7 +109,7 @@ def is_edge_in_path(path: List[int], edge: tuple[int, int]) -> bool:
 
 def judge_common_edges(path1: List[int], path2: List[int]) -> bool:
     """
-    2つのパスに共通するエッジがあるかどうかを判定する関数
+    judge whether two paths have common edges
     """
     judge = False
     for i in range(len(path1) - 1):

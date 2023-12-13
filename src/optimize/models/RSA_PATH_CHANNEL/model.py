@@ -3,10 +3,6 @@ from typing import Dict, List, Tuple, Optional
 import time
 import gurobipy as gp
 from dataclasses import dataclass
-from pathlib import Path
-
-from src.utils.paths import DATA_DIR
-from src.optimize.result import OptResult
 
 
 @dataclass(frozen=True)
@@ -20,7 +16,7 @@ class PathChannelInput:
     gamma:          Dict[Tuple[int, int, int, int], int]
     lower_bound:    int = None
 
-
+@dataclass(frozen=True)
 class PathChannelOutput:
     calculation_time:   float
     objective:          Optional[float]
@@ -159,7 +155,7 @@ class PathChannelModel(PathChannelObjectiveFunction, PathChannelConstraint):
             used_slots += self.variable.y_s[s_ind]
         return used_slots
 
-    def solve(self) -> None:
+    def solve(self) -> PathChannelOutput:
         # set model
         self._set_problem()
 
@@ -172,6 +168,7 @@ class PathChannelModel(PathChannelObjectiveFunction, PathChannelConstraint):
         if self.problem.Status == gp.GRB.INFEASIBLE:
             self.objective = None
             self.used_slots = None
+            print("Infeasible")
         else:
             self.objective = self.problem.ObjVal
             self.variable.to_values()

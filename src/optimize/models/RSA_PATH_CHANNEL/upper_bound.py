@@ -104,7 +104,9 @@ class PathUpperBoundConstraint:
         for d_ind, _ in self.input.D.items():
             for p_ind, _ in enumerate(self.input.P[d_ind]):
                 self.problem.addConstr(
-                    self.variable.f[d_ind] + self.input.num_slots[d_ind, p_ind] - 1 
+                    self.variable.f[d_ind] + \
+                        self.input.num_slots[d_ind, p_ind] * \
+                            self.input.x[d_ind, p_ind]
                     <= self.variable.F_max
                 )
         # update constraints
@@ -130,7 +132,7 @@ class PathUpperBoundModel(PathUpperBoundObjectiveFunction, PathUpperBoundConstra
         self.set_objective_function()
         self.set_constraint()
 
-    def solve(self) -> PathUpperBoundInput:
+    def solve(self) -> PathUpperBoundOutput:
         self._set_problem()
         # start optimization
         start = time.time()
