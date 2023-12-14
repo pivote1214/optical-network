@@ -37,8 +37,8 @@
   $ P^d $                 & 通信要求 $ d \in D $ に対するパスの集合 \\
   $ n^d_p $               & 通信要求 $ d \in D $ に $ p \in P^d $ 割り当てる際の必要なスロット数 \\
   $ C^d_p $               & 通信要求 $ d \in D $ に $ p \in P^d $ 割り当てる際の候補チャネルの集合 \\
-  $ \delta^d_{e, p} $     & 通信要求 $ d \in D $ の候補パス $ p \in P^d $ にリンク $ e \in E $ が含まれる場合1 \\
-  $ \gamma^d_{s, c, p} $  & 通信要求 $ d \in D $ の候補パス $ p \in P^d $、チャネル $ c \in C^d_p $ にスライス $ s \in S $ が含まれる場合1 \\
+  $ \delta^d_{e, p} $     & 候補パス $ p \in P^d $ にリンク $ e \in E $ が含まれる場合1 \\
+  $ \gamma^d_{s, c, p} $  & 通信要求 チャネル $ c \in C^d_p $ にスライス $ s \in S $ が含まれる場合1
 \end{tblr}
 
 \subsection{実験パラメータ}
@@ -54,7 +54,7 @@
   demands\_seeds      & int       & $ D $ \\
   k                   & int       & $ P^d $ \\
   path\_algo\_name    & str       & $ P^d $ \\
-  alpha:              & float     & $ P^d $ \\
+  alpha              & float     & $ P^d $ \\
   bound\_algo         & bool      & - \\
   TIMELIMIT           & int       & - \\
   W                   & dict      & $ n^d_p $ \\
@@ -79,14 +79,38 @@
   {F_{use}} % 目的関数
   {\label{lower-bound-model}} % 問題のラベル
   {} % minの左側
-  \addConstraint{\sum_{p \in P^d} x^d_p}{= 1}, \quad \forall d \in D
+  \addConstraint{\sum_{p \in P^d} x^d_p}{= 1}, 
+  \quad \forall d \in D
+  \addConstraint{F_{use}}{\ge \sum_{d \in D} \sum_{p \in P^d} \delta^d_{e, p} n^d_p x^d_p - 1}, 
+  \quad \forall e \in E
 \end{mini}
+
+出力は、$ F_{use} $ と $ x^d_p $ である。
 
 \section{上限値の計算モデル}
 
 \subsection{変数}
 
+\begin{tblr}{lll}
+  variable              & type    & meaning \\
+  \hline
+  $ o_{d d^\prime} $    & BINARY  & $ d \in D $ が $ d^\prime \in D $ よりも小さいインデックスを使う場合1 \\
+  $ f_d $               & INTEGER & 通信要求 $ d \in D $ の先頭のスロットインデックス \\
+  $ F_{max} $           & INTEGER & Pathモデルの上限値
+\end{tblr}
+
 \subsection{定式化}
+
+\begin{mini}
+  {} % 決定変数
+  {F_{max}} % 目的関数
+  {\label{upper-bound-model}} % 問題のラベル
+  {} % minの左側
+  \addConstraint{\sum_{p \in P^d} x^d_p}{= 1}, 
+  \quad \forall d \in D
+  \addConstraint{F_{use}}{\ge \sum_{d \in D} \sum_{p \in P^d} \delta^d_{e, p} n^d_p x^d_p - 1}, 
+  \quad \forall e \in E
+\end{mini}
 
 \section{Path/ChannelのILPモデル}
 
