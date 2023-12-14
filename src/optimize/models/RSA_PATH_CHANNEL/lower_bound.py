@@ -88,7 +88,7 @@ class PathLowerBoundConstraint:
                             self.variable.x[d_ind, p_ind] 
                             for d_ind, _ in self.input.D.items() 
                             for p_ind, _ in enumerate(self.input.P[d_ind])
-                ) 
+                ) - 1
                 <= self.variable.F_use
             )
         # update constraints
@@ -105,8 +105,10 @@ class PathLowerBoundModel(PathLowerBoundObjectiveFunction, PathLowerBoundConstra
         self.name   = "PathLowerBound"
 
     def _set_problem(self) -> None:
+        print('-' * 50)
+        print('PathLowerBound Start!')
         self.problem = gp.Model(self.name)
-        self.problem.setParam(gp.GRB.Param.OutputFlag, False)
+        # self.problem.setParam(gp.GRB.Param.OutputFlag, False)
 
         self.variable = PathLowerBoundVariable(input=self.input, problem=self.problem)
         self.problem = self.variable.set_variable()

@@ -141,8 +141,8 @@ class PathChannelModel(PathChannelObjectiveFunction, PathChannelConstraint):
 
     def _set_problem(self) -> None:
         self.problem = gp.Model(self.name)
-        self.problem.setParam('OutputFlag', 0)
-
+        # self.problem.setParam(gp.GRB.Param.OutputFlag, 0)
+        
         self.variable = PathChannelVariable(input=self.input, problem=self.problem)
         self.problem = self.variable.set_variable()
         

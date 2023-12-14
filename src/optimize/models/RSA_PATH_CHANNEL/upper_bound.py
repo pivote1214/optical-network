@@ -84,29 +84,30 @@ class PathUpperBoundConstraint:
         # set nonoverlap constraint
         for d_1, _ in self.input.D.items():
             for d_2, _ in self.input.D.items():
-                if d_1 != d_2:
+                if d_1 < d_2:
                     self.problem.addConstr(
                         self.variable.o[d_1, d_2] + self.variable.o[d_2, d_1] == 1
                     )
         # set slot index constraint
         for d_1, _ in self.input.D.items():
             for d_2, _ in self.input.D.items():
-                if d_1 != d_2:
-                    for p_1, _ in enumerate(self.input.P[d_1]):
-                        for p_2, _ in enumerate(self.input.P[d_2]):
-                            if judge_common_edges(self.input.P[d_1][p_1], self.input.P[d_2][p_2]):
-                                self.problem.addConstr(
-                                    self.variable.f[d_1] + self.input.num_slots[d_1, p_1] 
-                                    <= self.variable.f[d_2] + self.input.M * \
-                                        (3 - self.input.x[d_1, p_1] - self.input.x[d_2, p_2] - self.variable.o[d_1, d_2])
-                                        )
+                if d_1 >= d_2:
+                    continue
+                for p_1, _ in enumerate(self.input.P[d_1]):
+                    for p_2, _ in enumerate(self.input.P[d_2]):
+                        if judge_common_edges(self.input.P[d_1][p_1], self.input.P[d_2][p_2]):
+                            self.problem.addConstr(
+                                self.variable.f[d_1] + self.input.num_slots[d_1, p_1] 
+                                <= self.variable.f[d_2] + self.input.M * \
+                                    (3 - self.input.x[d_1, p_1] - self.input.x[d_2, p_2] - self.variable.o[d_1, d_2])
+                                    )
         # set F_max constraint
         for d_ind, _ in self.input.D.items():
             for p_ind, _ in enumerate(self.input.P[d_ind]):
                 self.problem.addConstr(
                     self.variable.f[d_ind] + \
                         self.input.num_slots[d_ind, p_ind] * \
-                            self.input.x[d_ind, p_ind]
+                            self.input.x[d_ind, p_ind] - 1
                     <= self.variable.F_max
                 )
         # update constraints
@@ -123,8 +124,10 @@ class PathUpperBoundModel(PathUpperBoundObjectiveFunction, PathUpperBoundConstra
         self.name   = "PathUpperBound"
 
     def _set_problem(self) -> None:
+        print('-' * 50)
+        print('PathUpperBound Start!')
         self.problem = gp.Model(self.name)
-        self.problem.setParam(gp.GRB.Param.OutputFlag, False)
+        # self.problem.setParam(gp.GRB.Param.OutputFlag, False)
 
         self.variable = PathUpperBoundVariable(input=self.input, problem=self.problem)
         self.problem = self.variable.set_variable()
