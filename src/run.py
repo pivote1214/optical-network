@@ -26,7 +26,7 @@ if __name__ == "__main__":
     network_name            = 'NSF'
     graph                   = load_network(network_name)
     num_slots               = 320
-    num_demands             = 15
+    num_demands             = 100
     demands_population      = [50, 100, 150, 200]
     demands_seeds_values    = [seed * 12 for seed in range(1, 11)]
     k_values                = [2, 3]
