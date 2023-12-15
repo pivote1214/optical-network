@@ -27,50 +27,59 @@
 
 \subsection{集合・定数}
 
-\begin{tblr}{ll}
-  symbol                  & meaning \\
-  \hline
-  $ E $                   & リンクの集合 \\
-  $ S $                   & 周波数スロットの集合 \\
-  $ D $                   & 通信要求の集合 \\
-  $ M $                   & 変調方式の集合 \\
-  $ P^d $                 & 通信要求 $ d \in D $ に対するパスの集合 \\
-  $ n^d_p $               & 通信要求 $ d \in D $ に $ p \in P^d $ 割り当てる際の必要なスロット数 \\
-  $ C^d_p $               & 通信要求 $ d \in D $ に $ p \in P^d $ 割り当てる際の候補チャネルの集合 \\
-  $ \delta^d_{e, p} $     & 候補パス $ p \in P^d $ にリンク $ e \in E $ が含まれる場合1 \\
-  $ \gamma^d_{s, c, p} $  & 通信要求 チャネル $ c \in C^d_p $ にスライス $ s \in S $ が含まれる場合1
-\end{tblr}
+\begin{center}
+  \begin{tblr}{ll}
+    symbol                  & meaning \\
+    \hline
+    $ E $                   & リンクの集合 \\
+    $ S $                   & 周波数スロットの集合 \\
+    $ D $                   & 通信要求の集合 \\
+    $ M $                   & 変調方式の集合 \\
+    $ P^d $                 & 通信要求 $ d \in D $ に対するパスの集合 \\
+    $ n^d_p $               & 通信要求 $ d \in D $ に $ p \in P^d $ 割り当てる際の必要なスロット数 \\
+    $ C^d_p $               & 通信要求 $ d \in D $ に $ p \in P^d $ 割り当てる際の候補チャネルの集合 \\
+    $ \delta^d_{e, p} $     & 候補パス $ p \in P^d $ にリンク $ e \in E $ が含まれる場合1 \\
+    $ \gamma^d_{s, c, p} $  & 通信要求 チャネル $ c \in C^d_p $ にスライス $ s \in S $ が含まれる場合1
+  \end{tblr}
+\end{center}
+
 
 \subsection{実験パラメータ}
 
-\begin{tblr}{llc}
-  name                & type      & related parameter \\
-  \hline
-  network\_name       & str       & $ E $ \\
-  graph               & nx.Graph  & $ E $ \\
-  num\_slots          & int       & $ S $ \\
-  num\_demands        & int       & $ D $ \\
-  demands\_population & list      & $ D $ \\
-  demands\_seeds      & int       & $ D $ \\
-  k                   & int       & $ P^d $ \\
-  path\_algo\_name    & str       & $ P^d $ \\
-  alpha              & float     & $ P^d $ \\
-  bound\_algo         & bool      & - \\
-  TIMELIMIT           & int       & - \\
-  W                   & dict      & $ n^d_p $ \\
-  TRAFFIC\_BPSK       & float     & $ n^d_p $ \\
-\end{tblr}
+\begin{center}
+  \begin{tblr}{llc}
+    name                & type      & related parameter \\
+    \hline
+    network\_name       & str       & $ E $ \\
+    graph               & nx.Graph  & $ E $ \\
+    num\_slots          & int       & $ S $ \\
+    num\_demands        & int       & $ D $ \\
+    demands\_population & list      & $ D $ \\
+    demands\_seeds      & int       & $ D $ \\
+    k                   & int       & $ P^d $ \\
+    path\_algo\_name    & str       & $ P^d $ \\
+    alpha              1& float     & $ P^d $ \\
+    bound\_algo         & bool      & - \\
+    TIMELIMIT           & int       & - \\
+    W                   & dict      & $ n^d_p $ \\
+    TRAFFIC\_BPSK       & float     & $ n^d_p $ \\
+  \end{tblr}
+\end{center}
+
 
 \section{下限値の計算モデル}
 
 \subsection{変数}
 
-\begin{tblr}{lll}
-  variable    & type    & meaning \\
-  \hline
-  $ x^d_p $   & BINARY  & 通信要求 $ d \in D $ にパス $ p \in P^d $ を割り当てる場合1 \\
-  $ F_{use} $   & INTEGER & 各辺の使用スロット数の総和の最大値
-\end{tblr}
+\begin{center}
+  \begin{tblr}{lll}
+    variable    & type    & meaning \\
+    \hline
+    $ x^d_p $   & BINARY  & 通信要求 $ d \in D $ にパス $ p \in P^d $ を割り当てる場合1 \\
+    $ F_{use} $   & INTEGER & 各辺の使用スロット数の総和の最大値
+  \end{tblr}
+\end{center}
+
 
 \subsection{定式化}
 
@@ -79,25 +88,26 @@
   {F_{use}} % 目的関数
   {\label{lower-bound-model}} % 問題のラベル
   {} % minの左側
-  \addConstraint{\sum_{p \in P^d} x^d_p}{= 1}, 
-  \quad \forall d \in D
-  \addConstraint{F_{use}}{\ge \sum_{d \in D} \sum_{p \in P^d} \delta^d_{e, p} n^d_p x^d_p - 1}, 
-  \quad \forall e \in E
+  \addConstraint{\sum_{p \in P^d} x^d_p}{= 1, \quad}{\forall d \in D}
+  \addConstraint{F_{use}}{\ge \sum_{d \in D} \sum_{p \in P^d} \delta^d_{e, p} n^d_p x^d_p - 1, \quad}{\forall e \in E}
 \end{mini}
 
-出力は、$ F_{use} $ と $ x^d_p $ である。
+出力は、最適解の下限値となる $ F_{use} $ と それを達成するパスの割当 $ x^d_p $ である。
 
 \section{上限値の計算モデル}
 
 \subsection{変数}
 
-\begin{tblr}{lll}
-  variable              & type    & meaning \\
-  \hline
-  $ o_{d d^\prime} $    & BINARY  & $ d \in D $ が $ d^\prime \in D $ よりも小さいインデックスを使う場合1 \\
-  $ f_d $               & INTEGER & 通信要求 $ d \in D $ の先頭のスロットインデックス \\
-  $ F_{max} $           & INTEGER & Pathモデルの上限値
-\end{tblr}
+\begin{center}
+  \begin{tblr}{lll}
+    variable              & type    & meaning \\
+    \hline
+    $ o_{d d^\prime} $    & BINARY  & $ d \in D $ が $ d^\prime \in D $ よりも小さいインデックスを使う場合1 \\
+    $ f_d $               & INTEGER & 通信要求 $ d \in D $ の先頭のスロットインデックス \\
+    $ F_{max} $           & INTEGER & Pathモデルの上限値
+  \end{tblr}
+\end{center}
+
 
 \subsection{定式化}
 
@@ -106,16 +116,42 @@
   {F_{max}} % 目的関数
   {\label{upper-bound-model}} % 問題のラベル
   {} % minの左側
-  \addConstraint{\sum_{p \in P^d} x^d_p}{= 1}, 
-  \quad \forall d \in D
-  \addConstraint{F_{use}}{\ge \sum_{d \in D} \sum_{p \in P^d} \delta^d_{e, p} n^d_p x^d_p - 1}, 
-  \quad \forall e \in E
+  \addConstraint{o_{d d^\prime} + o_{d^\prime d}}{= 1, \quad}
+  {\forall d, d^\prime \in D : d \neq d^\prime}
+  \addConstraint{f_d + n^d_p}{\le f_{d^\prime} + M [3 - (o_{d d^\prime} + x^d_p + x^{d^\prime}_p)], \quad}
+  {\forall d, d^\prime \in D, p \in P^d, p^\prime \in P^{d^\prime} : d \neq d^\prime, p \cap p^\prime \neq \emptyset}
+  \addConstraint{F_{max}}{\ge f_d + n^d_p x^d_p - 1, \quad}
+  {\forall d \in D, p \in P^d}
 \end{mini}
 
 \section{Path/ChannelのILPモデル}
 
 \subsection{変数}
 
+\begin{center}
+  \begin{tblr}{lll}
+    variable        & type    & meaning \\
+    \hline
+    $ x^d_{p, c} $  & BINARY  & 通信要求 $ d \in D $ をパス $ p \in P^d $ のチャネル $ c \in C^d_p $ を割り当てる場合1 \\
+    $ y_{es} $      & BINARY  & リンク $ e \in E $ のスロット $ s \in S $ が使用されている場合1 \\
+    $ y_s $         & BINARY  & いずれかのリンクでスロット $ s \in S $ が使用されている場合
+  \end{tblr}
+\end{center}
+
+
 \subsection{定式化}
+
+\begin{mini}
+  {} % 決定変数
+  {\sum_{s \in S} y_s} % 目的関数
+  {\label{path-channel-model}} % 問題のラベル
+  {} % minの左側
+  \addConstraint{\sum_{p \in P^d} x^d_{p, c}}{= 1, \quad}
+  {\forall d \in D}
+  \addConstraint{\sum_{d \in D} \sum_{p \in P^d} \sum_{c \in C^d_p} \gamma^d_{s, c, p} \delta^d_{e, p} x^d_{p, c}}{\le y_{es}, \quad}
+  {\forall e \in E, s \in S}
+  \addConstraint{\sum_{e \in E} y_{es}}{\le |E| y_s, \quad}
+  {\forall s \in S}
+\end{mini}
 
 \end{document}
