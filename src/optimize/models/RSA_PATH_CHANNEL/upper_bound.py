@@ -132,6 +132,7 @@ class PathUpperBoundModel(PathUpperBoundObjectiveFunction, PathUpperBoundConstra
     def _set_problem(self) -> None:
         self.problem = gp.Model(self.name)
         # self.problem.setParam(gp.GRB.Param.OutputFlag, False)
+        self.problem.setParam(gp.GRB.Param.TimeLimit, 600)
 
         self.variable = PathUpperBoundVariable(input=self.input, problem=self.problem)
         self.problem = self.variable.set_variable()

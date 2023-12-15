@@ -50,7 +50,7 @@ if __name__ == "__main__":
         f.write(f'TIMELIMIT:            {TIMELIMIT}\n')
 
     # run
-    metrics = ['used_slots', 'calculation_time', 'lower_bound', 'upper_bound']
+    metrics = ['used_slots', 'Gap(%)', 'calculation_time', 'lower_bound', 'upper_bound']
     algo_columns = [f'{algo}_{alpha}' for algo, alpha in path_algo_infos]
     # make multi-column
     columns = pd.MultiIndex.from_product([metrics, algo_columns])
@@ -125,6 +125,9 @@ if __name__ == "__main__":
                 result_table.loc[(k, demands_seeds), 
                                  ('used_slots', algo_column)] = \
                                      main_model_output.used_slots
+                result_table.loc[(k, demands_seeds), 
+                                 ('Gap(%)', algo_column)] = \
+                                     main_model_output.gap
                 result_table.loc[(k, demands_seeds), 
                                  ('calculation_time', algo_column)] = \
                                      main_model_output.calculation_time
