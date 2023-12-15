@@ -1,4 +1,5 @@
 import os
+import pprint
 import gurobipy as gp
 import pandas as pd
 
@@ -26,16 +27,16 @@ if __name__ == "__main__":
     network_name            = 'NSF'
     graph                   = load_network(network_name)
     num_slots               = 320
-    num_demands             = 100
+    num_demands             = 60
     demands_population      = [50, 100, 150, 200]
     demands_seeds_values    = [seed * 12 for seed in range(1, 11)]
     k_values                = [2, 3]
     path_algo_infos         = [('kSP', None), ('kSPwLO', 0.3)]
     bound_algo              = True
-    TIMELIMIT               = 3600
+    TIMELIMIT               = 600
 
     # write global config
-    with open(RESULT_DIR / f'experiment{experiment_num}/ global_config.txt', 'w') as f:
+    with open(RESULT_DIR / f'experiment{experiment_num}/global_config.txt', 'w') as f:
         f.write(f'global config\n')
         f.write(f'model:                {model_name}\n')
         f.write(f'network_name:         {network_name}\n')
@@ -87,15 +88,16 @@ if __name__ == "__main__":
                     num_slots=lower_bound_input.num_slots, 
                     delta=lower_bound_input.delta, 
                     x=lower_bound_output.x, 
-                    M=len(lower_bound_input.S)
+                    F_use=lower_bound_output.lower_bound, 
+                    M=320
                     )
                 # run upper bound model
                 upper_bound_model   = PathUpperBoundModel(upper_bound_input)
                 upper_bound_output  = upper_bound_model.solve()
 
                 # make main model input
-                upper_bound = upper_bound_output.upper_bound
-                S = list(range(upper_bound))
+                upper_bound = upper_bound_output.upper_bound + 5
+                S = list(range(upper_bound)) 
                 C = make_input.make_channels(
                     S, lower_bound_input.num_slots
                     )
@@ -111,7 +113,8 @@ if __name__ == "__main__":
                     C=C, 
                     delta=lower_bound_input.delta, 
                     gamma=gamma, 
-                    lower_bound=lower_bound_output.lower_bound
+                    lower_bound=lower_bound_output.lower_bound, 
+                    TIMELIMIT=TIMELIMIT
                     )
                 # run main model
                 main_model          = PathChannelModel(main_model_input)
