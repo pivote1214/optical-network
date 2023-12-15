@@ -1,3 +1,4 @@
+import pprint
 from typing import Dict, List, Tuple
 
 import time
@@ -16,6 +17,7 @@ class PathUpperBoundInput:
     num_slots:  Dict[Tuple[int, int], int]
     delta:      Dict[Tuple[int, int, int], int]
     x:          Dict[Tuple[int, int], int]
+    F_use:      int
     M:          int
 
 
@@ -84,32 +86,36 @@ class PathUpperBoundConstraint:
         # set nonoverlap constraint
         for d_1, _ in self.input.D.items():
             for d_2, _ in self.input.D.items():
-                if d_1 < d_2:
-                    self.problem.addConstr(
-                        self.variable.o[d_1, d_2] + self.variable.o[d_2, d_1] == 1
-                    )
+                if d_1 >= d_2:
+                    continue
+                self.problem.addConstr(
+                    self.variable.o[d_1, d_2] + self.variable.o[d_2, d_1] == 1
+                )
         # set slot index constraint
         for d_1, _ in self.input.D.items():
             for d_2, _ in self.input.D.items():
-                if d_1 >= d_2:
+                if d_1 == d_2:
                     continue
                 for p_1, _ in enumerate(self.input.P[d_1]):
                     for p_2, _ in enumerate(self.input.P[d_2]):
                         if judge_common_edges(self.input.P[d_1][p_1], self.input.P[d_2][p_2]):
                             self.problem.addConstr(
                                 self.variable.f[d_1] + self.input.num_slots[d_1, p_1] 
-                                <= self.variable.f[d_2] + self.input.M * \
-                                    (3 - self.input.x[d_1, p_1] - self.input.x[d_2, p_2] - self.variable.o[d_1, d_2])
+                                <= self.variable.f[d_2] + \
+                                    self.input.M * (3 - self.input.x[d_1, p_1] - self.input.x[d_2, p_2] - self.variable.o[d_1, d_2])
                                     )
-        # set F_max constraint
+        # define F_max
         for d_ind, _ in self.input.D.items():
             for p_ind, _ in enumerate(self.input.P[d_ind]):
                 self.problem.addConstr(
                     self.variable.f[d_ind] + \
-                        self.input.num_slots[d_ind, p_ind] * \
-                            self.input.x[d_ind, p_ind] - 1
+                        self.input.num_slots[d_ind, p_ind] * self.input.x[d_ind, p_ind] - 1
                     <= self.variable.F_max
                 )
+        # set F_max lower bound
+        self.problem.addConstr(
+            self.variable.F_max >= self.input.F_use
+        )
         # update constraints
         self.problem.update()
         
@@ -124,8 +130,6 @@ class PathUpperBoundModel(PathUpperBoundObjectiveFunction, PathUpperBoundConstra
         self.name   = "PathUpperBound"
 
     def _set_problem(self) -> None:
-        print('-' * 50)
-        print('PathUpperBound Start!')
         self.problem = gp.Model(self.name)
         # self.problem.setParam(gp.GRB.Param.OutputFlag, False)
 
