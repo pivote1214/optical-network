@@ -15,13 +15,14 @@ class PathChannelInput:
     delta:          Dict[Tuple[int, int, int], int]
     gamma:          Dict[Tuple[int, int, int, int], int]
     lower_bound:    int = None
-    TIMELIMIT:      int = 3600
+    TIMELIMIT:      int = 600
 
 @dataclass(frozen=True)
 class PathChannelOutput:
     calculation_time:   float
     objective:          Optional[float]
     used_slots:         Optional[int]
+    gap:                Optional[float]
     x:                  Dict[Tuple[int, int, int], int]
     y_es:               Dict[Tuple[int, int], int]
     y_s:                Dict[int, int]
@@ -179,17 +180,20 @@ class PathChannelModel(PathChannelObjectiveFunction, PathChannelConstraint):
         if self.problem.Status == gp.GRB.INFEASIBLE:
             self.objective = None
             self.used_slots = None
+            self.gap = None
             print("Infeasible")
         else:
             self.objective = self.problem.ObjVal
             self.variable.to_values()
             self.used_slots = self.calculate_used_slots()
+            self.gap = self.problem.MIPGap
 
         # save result
         self.output = PathChannelOutput(
             calculation_time=elapsed_time, 
             objective=self.objective, 
             used_slots=self.used_slots, 
+            gap=self.gap, 
             x=self.variable.x, 
             y_es=self.variable.y_es, 
             y_s=self.variable.y_s
