@@ -15,6 +15,7 @@ class PathChannelInput:
     delta:          Dict[Tuple[int, int, int], int]
     gamma:          Dict[Tuple[int, int, int, int], int]
     lower_bound:    int = None
+    TIMELIMIT:      int = 3600
 
 @dataclass(frozen=True)
 class PathChannelOutput:
@@ -73,7 +74,7 @@ class PathChannelObjectiveFunction:
 
     def set_objective_function(self) -> None:
         self.problem.setObjective(
-            gp.quicksum(self.variable.y_s[s_ind] * s_ind for s_ind in self.input.S), 
+            gp.quicksum(self.variable.y_s[s_ind] for s_ind in self.input.S), 
             gp.GRB.MINIMIZE
         )
         self.problem.update()
@@ -118,16 +119,25 @@ class PathChannelConstraint:
                 ) 
                 <= len(self.input.E) * self.variable.y_s[s_ind]
             )
-        # set lower bound constraint
-        if self.input.lower_bound is not None:
-            self.problem.addConstr(
-                gp.quicksum(
-                    self.variable.y_s[s_ind]
-                    for s_ind, _ in enumerate(self.input.S)
-                ) 
-                >= self.input.lower_bound
-            )
-        # update constraints
+        # # set lower bound constraint
+        # if self.input.lower_bound is not None:
+        #     self.problem.addConstr(
+        #         gp.quicksum(
+        #             self.variable.y_s[s_ind]
+        #             for s_ind, _ in enumerate(self.input.S)
+        #         ) 
+        #         >= self.input.lower_bound
+        #     )
+        # # update constraints
+
+        # set objective function lower bound
+        self.problem.addConstr(
+            gp.quicksum(
+                self.variable.y_s[s_ind]
+                for s_ind, _ in enumerate(self.input.S)
+            ) 
+            >= self.input.lower_bound
+        )
         self.problem.update()
 
 class PathChannelModel(PathChannelObjectiveFunction, PathChannelConstraint):
@@ -142,6 +152,7 @@ class PathChannelModel(PathChannelObjectiveFunction, PathChannelConstraint):
     def _set_problem(self) -> None:
         self.problem = gp.Model(self.name)
         # self.problem.setParam(gp.GRB.Param.OutputFlag, 0)
+        self.problem.setParam(gp.GRB.Param.TimeLimit, self.input.TIMELIMIT)
         
         self.variable = PathChannelVariable(input=self.input, problem=self.problem)
         self.problem = self.variable.set_variable()
