@@ -120,25 +120,16 @@ class PathChannelConstraint:
                 ) 
                 <= len(self.input.E) * self.variable.y_s[s_ind]
             )
-        # # set lower bound constraint
-        # if self.input.lower_bound is not None:
-        #     self.problem.addConstr(
-        #         gp.quicksum(
-        #             self.variable.y_s[s_ind]
-        #             for s_ind, _ in enumerate(self.input.S)
-        #         ) 
-        #         >= self.input.lower_bound
-        #     )
-        # # update constraints
-
-        # set objective function lower bound
-        self.problem.addConstr(
-            gp.quicksum(
-                self.variable.y_s[s_ind]
-                for s_ind, _ in enumerate(self.input.S)
-            ) 
-            >= self.input.lower_bound
-        )
+        # set lower bound constraint
+        if self.input.lower_bound is not None:
+            self.problem.addConstr(
+                gp.quicksum(
+                    self.variable.y_s[s_ind]
+                    for s_ind, _ in enumerate(self.input.S)
+                ) 
+                >= self.input.lower_bound
+            )
+        # update constraints
         self.problem.update()
 
 class PathChannelModel(PathChannelObjectiveFunction, PathChannelConstraint):
@@ -153,7 +144,6 @@ class PathChannelModel(PathChannelObjectiveFunction, PathChannelConstraint):
     def _set_problem(self) -> None:
         self.problem = gp.Model(self.name)
         # self.problem.setParam(gp.GRB.Param.OutputFlag, 0)
-        self.problem.setParam(gp.GRB.Param.TimeLimit, self.input.TIMELIMIT)
         
         self.variable = PathChannelVariable(input=self.input, problem=self.problem)
         self.problem = self.variable.set_variable()
@@ -170,6 +160,18 @@ class PathChannelModel(PathChannelObjectiveFunction, PathChannelConstraint):
     def solve(self) -> PathChannelOutput:
         # set model
         self._set_problem()
+        # find initial solution
+        oldSolutionLimit = self.problem.Params.SolutionLimit
+        self.problem.Params.SolutionLimit = 1
+        self.problem.optimize()
+        # set time limit
+        self.problem.Params.TimeLimit = max(0, 600 - self.problem.getAttr(gp.GRB.Attr.Runtime))
+        self.problem.Params.SolutionLimit = oldSolutionLimit - self.problem.Params.SolutionLimit
+        self.problem.optimize()
+        # set MIPGap
+        self.problem.Params.MIPGap = 0.05
+        self.problem.Params.TimeLimit = self.input.TIMELIMIT
+        self.problem.optimize()
 
         # solve
         start = time.time()

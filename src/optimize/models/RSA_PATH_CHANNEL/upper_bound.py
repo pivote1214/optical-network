@@ -131,8 +131,8 @@ class PathUpperBoundModel(PathUpperBoundObjectiveFunction, PathUpperBoundConstra
 
     def _set_problem(self) -> None:
         self.problem = gp.Model(self.name)
+        # # ログを取らない
         # self.problem.setParam(gp.GRB.Param.OutputFlag, False)
-        self.problem.setParam(gp.GRB.Param.TimeLimit, 600)
 
         self.variable = PathUpperBoundVariable(input=self.input, problem=self.problem)
         self.problem = self.variable.set_variable()
@@ -144,6 +144,17 @@ class PathUpperBoundModel(PathUpperBoundObjectiveFunction, PathUpperBoundConstra
         self._set_problem()
         # start optimization
         start = time.time()
+        # find initial solution
+        oldSolutionLimit = self.problem.Params.SolutionLimit
+        self.problem.Params.SolutionLimit = 1
+        self.problem.optimize()
+        # set time limit
+        self.problem.Params.TimeLimit = max(0, 600 - self.problem.getAttr(gp.GRB.Attr.Runtime))
+        self.problem.Params.SolutionLimit = oldSolutionLimit - self.problem.Params.SolutionLimit
+        self.problem.optimize()
+        # set MIPGap
+        self.problem.Params.MIPGap = 0.05
+        self.problem.Params.TimeLimit = 1800
         self.problem.optimize()
         caculation_time = time.time() - start
 
