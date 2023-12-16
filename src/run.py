@@ -24,13 +24,13 @@ if __name__ == "__main__":
     network_name            = 'NSF'
     graph                   = load_network(network_name)
     num_slots               = 320
-    num_demands             = 20
+    num_demands             = 100
     demands_population      = [50, 100, 150, 200]
-    demands_seeds_values    = [seed * 12 for seed in range(1, 2)]
-    k_values                = [2]
+    demands_seeds_values    = [seed * 12 for seed in range(1, 11)]
+    k_values                = [2, 3]
     path_algo_infos         = [('kSP', None), ('kSPwLO', 0.3)]
     bound_algo              = True
-    TIMELIMIT               = 600
+    TIMELIMIT               = 3600
 
     # write global config
     with open(RESULT_DIR / f'experiment{experiment_num}/global_config.txt', 'w') as f:
