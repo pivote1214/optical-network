@@ -124,14 +124,9 @@ def judge_common_edges(path1: List[int], path2: List[int]) -> bool:
 
 
 # graphのpickleファイルの作成
-# if __name__ == "__main__":
-#     for network_name in cr_table_network.keys():
-#         graph = create_network(network_name)
-#         full_path = GRAPH_DIR / f"{network_name}.pickle"
-#         with open(full_path, 'wb') as f:
-#             pickle.dump(graph, f)
-
-if __name__ == '__main__':
-    graph = load_network('N6S9')
-    nx.draw(graph)
-    plt.show()
+if __name__ == "__main__":
+    for network_name in cr_table_network.keys():
+        graph = create_network(network_name)
+        full_path = GRAPH_DIR / f"{network_name}.pickle"
+        with open(full_path, 'wb') as f:
+            pickle.dump(graph, f)
