@@ -5,6 +5,8 @@ import time
 import gurobipy as gp
 from dataclasses import dataclass
 
+from matplotlib.pylab import f
+
 from src.utils.graph import judge_common_edges
 
 
@@ -25,6 +27,9 @@ class PathUpperBoundInput:
 class PathUpperBoundOutput:
     calculation_time:   float
     upper_bound:        int
+    o:                  Dict[Tuple[int, int], int]
+    f:                  Dict[int, int]
+    F_max:              int
 
 
 class PathUpperBoundVariable:
@@ -118,6 +123,11 @@ class PathUpperBoundConstraint:
         )
         # update constraints
         self.problem.update()
+
+    def to_values(self) -> None:
+        self.o = {key: int(var.X) for key, var in self.o.items()}
+        self.f = {key: int(var.X) for key, var in self.f.items()}
+        self.F_max = int(self.F_max.X)
         
 
 class PathUpperBoundModel(PathUpperBoundObjectiveFunction, PathUpperBoundConstraint):
@@ -142,8 +152,10 @@ class PathUpperBoundModel(PathUpperBoundObjectiveFunction, PathUpperBoundConstra
 
     def solve(self) -> PathUpperBoundOutput:
         self._set_problem()
-        # start optimization
+        
+        # start!
         start = time.time()
+        
         # find initial solution
         oldSolutionLimit = self.problem.Params.SolutionLimit
         self.problem.Params.SolutionLimit = 1
@@ -154,17 +166,22 @@ class PathUpperBoundModel(PathUpperBoundObjectiveFunction, PathUpperBoundConstra
         self.problem.optimize()
         # set MIPGap
         self.problem.Params.MIPGap = 0.05
-        self.problem.Params.TimeLimit = 1800
+        self.problem.Params.TimeLimit = max(0, 1800 - self.problem.getAttr(gp.GRB.Attr.Runtime))
         self.problem.optimize()
+
+        # end!
         caculation_time = time.time() - start
 
         self.variable.to_values()
-        upper_bound = int(self.variable.F_max)
+        upper_bound = self.variable.F_max
 
         # save result
         self.output = PathUpperBoundOutput(
             calculation_time=caculation_time, 
-            upper_bound=upper_bound
+            upper_bound=upper_bound, 
+            o=self.variable.o, 
+            f=self.variable.f, 
+            F_max=self.variable.F_max
         )
 
         return self.output

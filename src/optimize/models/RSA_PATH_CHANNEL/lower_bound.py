@@ -20,6 +20,7 @@ class PathLowerBoundOutput:
     calculation_time:   float
     lower_bound:        int
     x:                  Dict[Tuple[int, int], int]
+    F_use:              int
 
 
 class PathLowerBoundVariable:
@@ -49,8 +50,8 @@ class PathLowerBoundVariable:
         self.problem.update()
 
     def to_values(self) -> None:
-        self.x = {key: var.X for key, var in self.x.items()}
-        self.F_use = self.F_use.X
+        self.x = {key: int(var.X) for key, var in self.x.items()}
+        self.F_use = int(self.F_use.X)
 
 
 class PathLowerBoundObjectiveFunction:
@@ -122,14 +123,15 @@ class PathLowerBoundModel(PathLowerBoundObjectiveFunction, PathLowerBoundConstra
         caculation_time = time.time() - start
 
         self.variable.to_values()
-        lower_bound = int(self.variable.F_use)
+        lower_bound = self.variable.F_use
         x = self.variable.x
 
         # save result
         self.output = PathLowerBoundOutput(
             calculation_time=caculation_time,
             lower_bound=lower_bound,
-            x=x
+            x=x, 
+            F_use=self.variable.F_use
         )
 
         return self.output

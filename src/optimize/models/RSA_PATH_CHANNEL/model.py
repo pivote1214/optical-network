@@ -17,6 +17,7 @@ class PathChannelInput:
     lower_bound:    int = None
     TIMELIMIT:      int = 600
 
+
 @dataclass(frozen=True)
 class PathChannelOutput:
     calculation_time:   float
@@ -26,6 +27,7 @@ class PathChannelOutput:
     x:                  Dict[Tuple[int, int, int], int]
     y_es:               Dict[Tuple[int, int], int]
     y_s:                Dict[int, int]
+
 
 class PathChannelVariable:
     def __init__(self, input: PathChannelInput, problem: gp.Model):
@@ -63,9 +65,9 @@ class PathChannelVariable:
         self.problem.update()
 
     def to_values(self) -> None:
-        self.x      = {key: var.X for key, var in self.x.items()}
-        self.y_es   = {key: var.X for key, var in self.y_es.items()}
-        self.y_s    = {key: var.X for key, var in self.y_s.items()}
+        self.x      = {key: int(var.X) for key, var in self.x.items()}
+        self.y_es   = {key: int(var.X) for key, var in self.y_es.items()}
+        self.y_s    = {key: int(var.X) for key, var in self.y_s.items()}
 
 
 class PathChannelObjectiveFunction:
@@ -132,6 +134,7 @@ class PathChannelConstraint:
         # update constraints
         self.problem.update()
 
+
 class PathChannelModel(PathChannelObjectiveFunction, PathChannelConstraint):
     input:      PathChannelInput
     variable:   PathChannelVariable
@@ -160,6 +163,10 @@ class PathChannelModel(PathChannelObjectiveFunction, PathChannelConstraint):
     def solve(self) -> PathChannelOutput:
         # set model
         self._set_problem()
+        
+        # start!
+        start = time.time()
+
         # find initial solution
         oldSolutionLimit = self.problem.Params.SolutionLimit
         self.problem.Params.SolutionLimit = 1
@@ -170,12 +177,10 @@ class PathChannelModel(PathChannelObjectiveFunction, PathChannelConstraint):
         self.problem.optimize()
         # set MIPGap
         self.problem.Params.MIPGap = 0.05
-        self.problem.Params.TimeLimit = self.input.TIMELIMIT
+        self.problem.Params.TimeLimit = max(0, self.input.TIMELIMIT - self.problem.getAttr(gp.GRB.Attr.Runtime))
         self.problem.optimize()
 
-        # solve
-        start = time.time()
-        self.problem.optimize()
+        # end!
         elapsed_time = time.time() - start
         
         # store result
