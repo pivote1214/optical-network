@@ -1,5 +1,5 @@
 import os
-import pprint
+import pickle
 import gurobipy as gp
 import pandas as pd
 
@@ -8,6 +8,7 @@ from src.optimize.params import Parameter
 from src.optimize.models.RSA_PATH_CHANNEL.optimizer import PathChannelOptimizer
 
 from src.utils.graph import load_network
+
 
 if __name__ == "__main__":
     # dummy
@@ -18,6 +19,8 @@ if __name__ == "__main__":
 
     # make directory
     os.makedirs(RESULT_DIR / f'experiment{experiment_num}', exist_ok=True)
+    for dir_name in ['main_model', 'lower_bound', 'upper_bound']:
+        os.makedirs(RESULT_DIR / f'experiment{experiment_num}' / dir_name, exist_ok=True)
 
     # set parameters
     model_name              = 'RSA_PATH_CHANNEL'
@@ -76,9 +79,10 @@ if __name__ == "__main__":
                 optimizer = PathChannelOptimizer(params)
                 main_model_output, lower_bound_output, upper_bound_output = optimizer.run()
 
+                # set column name
+                algo_column = f'{path_algo_name}_{alpha}'
                 # write result to result_table
                 if lower_bound_output is not None:
-                    algo_column = f'{path_algo_name}_{alpha}'
                     # write result to result_table
                     result_table.loc[(k, demands_seeds), 
                                     ('used_slots', algo_column)] = \
@@ -103,3 +107,16 @@ if __name__ == "__main__":
                                         round(upper_bound_output.calculation_time, 3)
                     # save result_table
                     result_table.to_csv(RESULT_DIR / f'experiment{experiment_num}' / 'result_table.csv')
+
+                # save outputs
+                for dir_name in ['main_model', 'lower_bound', 'upper_bound']:
+                    if dir_name == 'main_model':
+                        output = main_model_output
+                    elif dir_name == 'lower_bound':
+                        output = lower_bound_output
+                    elif dir_name == 'upper_bound':
+                        output = upper_bound_output
+                    if output is not None:
+                        with open(RESULT_DIR / f'experiment{experiment_num}' / dir_name / \
+                            f'k={k}_seeds={demands_seeds}_path={algo_column}_alpha={alpha}.pickle', 'wb') as f:
+                            pickle.dump(output, f)
