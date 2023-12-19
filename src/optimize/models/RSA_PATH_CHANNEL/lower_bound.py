@@ -19,6 +19,7 @@ class PathLowerBoundInput:
 class PathLowerBoundOutput:
     calculation_time:   float
     lower_bound:        int
+    gap:                float
     x:                  Dict[Tuple[int, int], int]
     F_use:              int
 
@@ -129,7 +130,8 @@ class PathLowerBoundModel(PathLowerBoundObjectiveFunction, PathLowerBoundConstra
         # save result
         self.output = PathLowerBoundOutput(
             calculation_time=caculation_time,
-            lower_bound=lower_bound,
+            lower_bound=lower_bound, 
+            gap=self.problem.MIPGap, 
             x=x, 
             F_use=self.variable.F_use
         )

@@ -27,6 +27,7 @@ class PathUpperBoundInput:
 class PathUpperBoundOutput:
     calculation_time:   float
     upper_bound:        int
+    gap:                float
     o:                  Dict[Tuple[int, int], int]
     f:                  Dict[int, int]
     F_max:              int
@@ -179,6 +180,7 @@ class PathUpperBoundModel(PathUpperBoundObjectiveFunction, PathUpperBoundConstra
         self.output = PathUpperBoundOutput(
             calculation_time=caculation_time, 
             upper_bound=upper_bound, 
+            gap=self.problem.MIPGap, 
             o=self.variable.o, 
             f=self.variable.f, 
             F_max=self.variable.F_max

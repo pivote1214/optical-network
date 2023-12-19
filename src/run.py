@@ -50,7 +50,9 @@ if __name__ == "__main__":
         f.write(f'TIMELIMIT:            {TIMELIMIT}\n')
 
     # run
-    metrics = ['used_slots', 'Gap', 'time(main)', 'lower_bound', 'time(lower)', 'upper_bound', 'time(upper)']
+    metrics = ['used_slots', 'Gap(main)', 'time(main)', 
+               'lower_bound', 'Gap(lower)', 'time(lower)', 
+               'upper_bound', 'Gap(upper)', 'time(upper)']
     algo_columns = [f'{algo}_{alpha}' for algo, alpha in path_algo_infos]
     # make multi-column
     columns = pd.MultiIndex.from_product([metrics, algo_columns])
@@ -83,25 +85,33 @@ if __name__ == "__main__":
                 algo_column = f'{path_algo_name}_{alpha}'
                 # write result to result_table
                 if lower_bound_output is not None:
-                    # write result to result_table
+                    # write main model result to result_table
                     result_table.loc[(k, demands_seeds), 
                                     ('used_slots', algo_column)] = \
                                         int(main_model_output.used_slots)
                     result_table.loc[(k, demands_seeds), 
-                                    ('Gap', algo_column)] = \
+                                    ('Gap(main)', algo_column)] = \
                                         round(main_model_output.gap * 100, 2)
                     result_table.loc[(k, demands_seeds), 
                                     ('time(main)', algo_column)] = \
                                         round(main_model_output.calculation_time, 3)
+                    # write lower bound result to result_table
                     result_table.loc[(k, demands_seeds), 
                                     ('lower_bound', algo_column)] = \
                                         int(lower_bound_output.lower_bound)
                     result_table.loc[(k, demands_seeds), 
+                                    ('Gap(lower)', algo_column)] = \
+                                        round(lower_bound_output.gap * 100, 2)
+                    result_table.loc[(k, demands_seeds), 
                                     ('time(lower)', algo_column)] = \
                                         round(lower_bound_output.calculation_time, 3)
+                    # write upper bound result to result_table
                     result_table.loc[(k, demands_seeds), 
                                     ('upper_bound', algo_column)] = \
                                         int(upper_bound_output.upper_bound)
+                    result_table.loc[(k, demands_seeds), 
+                                    ('Gap(upper)', algo_column)] = \
+                                        round(upper_bound_output.gap * 100, 2)
                     result_table.loc[(k, demands_seeds), 
                                     ('time(upper)', algo_column)] = \
                                         round(upper_bound_output.calculation_time, 3)
