@@ -115,7 +115,7 @@ class PathUpperBoundConstraint:
             for p_ind, _ in enumerate(self.input.P[d_ind]):
                 self.problem.addConstr(
                     self.variable.f[d_ind] + \
-                        self.input.num_slots[d_ind, p_ind] * self.input.x[d_ind, p_ind] - 1
+                        self.input.num_slots[d_ind, p_ind] * self.input.x[d_ind, p_ind]
                     <= self.variable.F_max
                 )
         # set F_max lower bound

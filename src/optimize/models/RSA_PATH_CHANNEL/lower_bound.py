@@ -90,7 +90,7 @@ class PathLowerBoundConstraint:
                             self.variable.x[d_ind, p_ind] 
                             for d_ind, _ in self.input.D.items() 
                             for p_ind, _ in enumerate(self.input.P[d_ind])
-                ) - 1
+                )
                 <= self.variable.F_use
             )
         # update constraints
