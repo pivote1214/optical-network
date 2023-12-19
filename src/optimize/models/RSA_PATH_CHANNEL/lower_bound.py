@@ -107,7 +107,7 @@ class PathLowerBoundModel(PathLowerBoundObjectiveFunction, PathLowerBoundConstra
 
     def _set_problem(self) -> None:
         self.problem = gp.Model(self.name)
-        self.problem.setParam(gp.GRB.Param.OutputFlag, False)
+        # self.problem.setParam(gp.GRB.Param.OutputFlag, False)
 
         self.variable = PathLowerBoundVariable(input=self.input, problem=self.problem)
         self.problem = self.variable.set_variable()

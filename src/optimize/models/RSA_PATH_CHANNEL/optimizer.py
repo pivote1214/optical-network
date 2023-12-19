@@ -27,9 +27,9 @@ class PathChannelOptimizer:
     def _run_with_bound_algo(self) -> Tuple[PathChannelOutput, PathLowerBoundOutput, PathUpperBoundOutput]:
         lower_bound_output = self._solve_lower_bound()
         upper_bound_output = self._solve_upper_bound()
-        upper_bound = upper_bound_output.upper_bound + 1
+        upper_bound = int(upper_bound_output.upper_bound) + 1
         # make main model input
-        S = list(range(upper_bound)) 
+        S = list(range(upper_bound))
         C = make_channels(
             S, self.input.num_slots
             )
