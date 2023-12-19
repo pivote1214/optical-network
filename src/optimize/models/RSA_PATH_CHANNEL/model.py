@@ -181,7 +181,7 @@ class PathChannelModel(PathChannelObjectiveFunction, PathChannelConstraint):
         self.problem.optimize()
 
         # end!
-        elapsed_time = time.time() - start
+        calculation_time = time.time() - start
         
         # store result
         if self.problem.Status == gp.GRB.INFEASIBLE:
@@ -197,7 +197,7 @@ class PathChannelModel(PathChannelObjectiveFunction, PathChannelConstraint):
 
         # save result
         self.output = PathChannelOutput(
-            calculation_time=elapsed_time, 
+            calculation_time=calculation_time, 
             objective=self.objective, 
             used_slots=self.used_slots, 
             gap=self.gap, 

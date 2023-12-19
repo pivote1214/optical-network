@@ -171,14 +171,14 @@ class PathUpperBoundModel(PathUpperBoundObjectiveFunction, PathUpperBoundConstra
         self.problem.optimize()
 
         # end!
-        caculation_time = time.time() - start
+        calculation_time = time.time() - start
 
         self.variable.to_values()
         upper_bound = self.variable.F_max
 
         # save result
         self.output = PathUpperBoundOutput(
-            calculation_time=caculation_time, 
+            calculation_time=calculation_time, 
             upper_bound=upper_bound, 
             gap=self.problem.MIPGap, 
             o=self.variable.o, 

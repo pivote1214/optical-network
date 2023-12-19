@@ -118,9 +118,12 @@ class PathLowerBoundModel(PathLowerBoundObjectiveFunction, PathLowerBoundConstra
 
     def solve(self) -> PathLowerBoundOutput:
         self._set_problem()
-        # start optimization
+        
+        # start!
         start = time.time()
+        # optimize
         self.problem.optimize()
+        # end!
         caculation_time = time.time() - start
 
         self.variable.to_values()
