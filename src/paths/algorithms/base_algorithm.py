@@ -1,7 +1,3 @@
-from __future__ import annotations
-
-from typing import Dict, Tuple, List
-
 import time
 import networkx as nx
 from itertools import combinations
@@ -22,16 +18,12 @@ class BasePathAlgorithm:
         self, 
         source: int, 
         target: int
-        ) -> Tuple[List[Tuple[int]], float]:
-        """
-        ある頂点対間のk個のパスを求める関数
-        """
+        ) -> tuple[list[tuple[int]], float]:
+        """method to find k paths between source and target"""
         raise NotImplementedError("This method should be implemented by subclasses")
 
-    def find_all_paths(self) -> Tuple[Dict[Tuple[int, int], List[Tuple[int]]], float]:
-        """
-        すべての頂点対間のk個のパスを求めるメソッド。
-        """
+    def find_all_paths(self) -> tuple[dict[tuple[int, int], list[tuple[int]]], float]:
+        """method to find all paths between all nodes"""
         start = time.time()
         all_paths = {}
         nodes_pair = list(combinations(self.graph.nodes, 2))

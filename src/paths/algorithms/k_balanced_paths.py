@@ -1,11 +1,8 @@
-from __future__ import annotations
-
-from typing import Dict, Tuple, List
-
 import time
 import networkx as nx
-from gurobipy import Model, GRB, quicksum
 from itertools import combinations
+from gurobipy import Model, GRB, quicksum
+
 from src.paths.algorithms.base_algorithm import BasePathAlgorithm
 from src.paths.algorithms.k_dissimilar_paths import KDissimilarPaths
 from src.paths.algorithms.k_shortest_paths import KShortestPaths
@@ -29,10 +26,8 @@ class KBalancedPath(BasePathAlgorithm):
         alpha: float, 
         theta_min: float, 
         theta_max: float
-        ) -> Tuple[List[Tuple[int]], None]:
-        """
-        k-Balanced PathをILPで解く関数
-        """
+        ) -> tuple[list[tuple[int]], None]:
+        """method to find path pair with k balanced paths algorithm"""
         model = Model('k_balanced_paths')
         model.Params.OutputFlag = 0
         paths = list(nx.all_simple_paths(
@@ -41,40 +36,41 @@ class KBalancedPath(BasePathAlgorithm):
         paths = [path for path in paths if calc_path_length(self.graph, path) <= self.length_limit]
         path_pairs = list(combinations(range(len(paths)), 2))
 
-        # 変数の定義
+        # variables
         x = model.addVars(len(paths), vtype=GRB.BINARY, name="x")
         y = model.addVars(path_pairs, vtype=GRB.BINARY, name="y")
 
-        # 目的関数
+        # objective function
         model.setObjective(
             quicksum(calc_path_length(self.graph, paths[i]) * x[i] for i in range(len(paths))), 
             GRB.MINIMIZE
             )
 
-        # 制約条件
+        # constraint
         model.addConstr(
             quicksum(x[i] for i in range(len(paths))) == min(self.path_nums, len(paths)), 
             "k_paths"
             )
 
-        # y_ij の表現
         for i, j in path_pairs:
+            if i > j:
+                continue
             model.addConstr(y[i, j] <= x[i], "y_constr_{}_{}".format(i, j))
             model.addConstr(y[i, j] <= x[j], "y_constr_{}_{}".format(j, i))
             model.addConstr(y[i, j] >= x[i] + x[j] - 1, "y_constr_sum_{}_{}".format(i, j))
 
-        # 類似度の制約
         model.addConstr(
             quicksum(
-                calc_path_similarity(self.graph, paths[i], paths[j]) * y[i, j] for i, j in path_pairs
+                calc_path_similarity(self.graph, paths[i], paths[j]) * y[i, j] 
+                for i, j in path_pairs if i < j
                 ) <= alpha * theta_min + (1 - alpha) * theta_max, 
             "theta_definition"
         )
 
-        # 求解
+        # optimize
         model.optimize()
 
-        # パス集合の取得
+        # get result
         k_paths = [paths[i] for i in range(len(paths)) if x[i].X > 0.5]
 
         return k_paths, None
@@ -82,10 +78,8 @@ class KBalancedPath(BasePathAlgorithm):
     def find_all_paths(
         self, 
         alpha: float
-        ) -> Tuple[List[List[Tuple[int]]], float]:
-        """
-        kBPですべての頂点対間のk個のパスを求めるメソッド
-        """
+        ) -> tuple[list[list[tuple[int]]], float]:
+        """method to find all paths between all nodes with k balanced paths algorithm"""
         start = time.time()
         all_paths = {}
         nodes_pair = list(combinations(self.graph.nodes(), 2))
@@ -100,10 +94,8 @@ class KBalancedPath(BasePathAlgorithm):
 
         return all_paths, elapsed_time
 
-    def _calc_theta(self) -> Tuple[Dict[Tuple[int, int], float], Dict[Tuple[int, int], float]]:
-        """
-        すべての頂点対間のtheta_min, theta_maxを求めるメソッド
-        """
+    def _calc_theta(self) -> tuple[dict[tuple[int, int], float], dict[tuple[int, int], float]]:
+        """method to calculate theta_min and theta_max for all nodes pair"""
         all_theta_min = {}
         all_theta_max = {}
 
