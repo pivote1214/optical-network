@@ -29,17 +29,21 @@
 
 \begin{center}
   \begin{tblr}{ll}
-    symbol                  & meaning \\
+    記号                     & 意味 \\
     \hline
     $ E $                   & リンクの集合 \\
-    $ S $                   & 周波数スロットの集合 \\
+    $ S $                   & スロットの集合 \\
     $ D $                   & 通信要求の集合 \\
-    $ M $                   & 変調方式の集合 \\
-    $ P^d $                 & 通信要求 $ d \in D $ に対するパスの集合 \\
-    $ n^d_p $               & 通信要求 $ d \in D $ に $ p \in P^d $ 割り当てる際の必要なスロット数 \\
-    $ C^d_p $               & 通信要求 $ d \in D $ に $ p \in P^d $ 割り当てる際の候補チャネルの集合 \\
-    $ \delta^d_{e, p} $     & 候補パス $ p \in P^d $ にリンク $ e \in E $ が含まれる場合1 \\
-    $ \gamma^d_{s, c, p} $  & 通信要求 チャネル $ c \in C^d_p $ にスライス $ s \in S $ が含まれる場合1
+    $ P^d $                 & 通信要求 $ d \in D $ に対する候補パスの集合 \\
+    $ n^d_p $               & 通信要求 $ d \in D $ にパス $ p \in P^d $ を使用する場合に必要なスロット数 \\
+    $ C^d_p $               & 通信要求 $ d \in D $ にパス $ p \in P^d $ を使用する場合の候補チャネルの集合 \\
+    $ \delta^d_{e, p} $     & 通信要求 $ d \in D $ の候補パス $ p \in P^d $ にリンク $ e \in E $ が含まれる場合1 \\
+    $ \gamma^d_{s, c, p} $  & 
+    \begin{tblr}{l}
+      通信要求 $ d \in D $ にパス $ p \in P^d $ を使用する場合の\\
+      候補チャネル $ c \in C^d_p $ にスライス $ s \in S $ が含まれる場合1
+    \end{tblr}
+    
   \end{tblr}
 \end{center}
 
@@ -133,7 +137,7 @@
     variable        & type    & meaning \\
     \hline
     $ x^d_{p, c} $  & BINARY  & 通信要求 $ d \in D $ をパス $ p \in P^d $ のチャネル $ c \in C^d_p $ を割り当てる場合1 \\
-    $ y_{es} $      & BINARY  & リンク $ e \in E $ のスロット $ s \in S $ が使用されている場合1 \\
+    $ y_{e, s} $      & BINARY  & リンク $ e \in E $ のスロット $ s \in S $ が使用されている場合1 \\
     $ y_s $         & BINARY  & いずれかのリンクでスロット $ s \in S $ が使用されている場合
   \end{tblr}
 \end{center}
@@ -148,9 +152,9 @@
   {} % minの左側
   \addConstraint{\sum_{p \in P^d} x^d_{p, c}}{= 1, \quad}
   {\forall d \in D}
-  \addConstraint{\sum_{d \in D} \sum_{p \in P^d} \sum_{c \in C^d_p} \gamma^d_{s, c, p} \delta^d_{e, p} x^d_{p, c}}{\le y_{es}, \quad}
+  \addConstraint{\sum_{d \in D} \sum_{p \in P^d} \sum_{c \in C^d_p} \gamma^d_{s, c, p} \delta^d_{e, p} x^d_{p, c}}{\le y_{e, s}, \quad}
   {\forall e \in E, s \in S}
-  \addConstraint{\sum_{e \in E} y_{es}}{\le |E| y_s, \quad}
+  \addConstraint{\sum_{e \in E} y_{e, s}}{\le |E| y_s, \quad}
   {\forall s \in S}
 \end{mini}
 
