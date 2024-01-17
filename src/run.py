@@ -24,10 +24,10 @@ if __name__ == "__main__":
 
     # set parameters
     model_name              = 'RSA_PATH_CHANNEL'
-    network_name            = 'EURO16'
+    network_name            = 'NSF'
     graph                   = load_network(network_name)
     num_slots               = 320
-    num_demands             = 100
+    num_demands             = 19
     demands_population      = [50, 100, 150, 200]
     demands_seeds_values    = [seed * 2 for seed in range(1, 11)]
     k_values                = [2]

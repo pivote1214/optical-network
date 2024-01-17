@@ -68,7 +68,7 @@ if __name__ == "__main__":
     # ダミー
     graph = gp.Model()
     # グラフの定義
-    network_name = "EURO16"
+    network_name = "NSF"
     graph = load_network(network_name)
 
     # パラメータの定義
