@@ -1,6 +1,5 @@
 import os
 import pickle
-from tkinter import TRUE
 import gurobipy as gp
 import pandas as pd
 

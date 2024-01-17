@@ -1,14 +1,10 @@
-from __future__ import annotations
-
-from typing import List
-
 import pickle
 import networkx as nx
 
 from src.utils.paths import GRAPH_DIR
 
 
-# 各グラフの定義
+# network_name: [(node1, node2, weight), ...]
 KLI2018 = [(1, 2, 500), (1, 5, 500), (2, 3, 500), 
            (3, 4, 500), (3, 5, 809), (4, 5, 500)]
 
@@ -31,7 +27,7 @@ EURO16 = [(1, 2, 514), (1, 4, 540), (2, 3, 393), (2, 5, 594), (2, 7, 600),
           (6, 10, 327), (7, 9, 271), (8, 9, 592), (8, 12, 381), (9, 11, 456), 
           (10, 11, 522), (10, 13, 720), (11, 12, 757), (11, 15, 534), 
           (12, 16, 420), (13, 14, 783), (14, 15, 400), (15, 16, 376)]
-    
+
 cr_table_network = {
                     'KLI2018': KLI2018,
                     'NSF': NSF, 
@@ -41,6 +37,7 @@ cr_table_network = {
                     'EURO16': EURO16
                     }
 
+
 def load_network(network_name: str) -> nx.DiGraph:
     """load graph from pickle file"""
     full_path = GRAPH_DIR / f"{network_name}.pickle"
@@ -49,37 +46,36 @@ def load_network(network_name: str) -> nx.DiGraph:
         
     return graph
 
+
 def create_network(network_name: str) -> nx.DiGraph:
     """
     create graph from network name
     """
     graph = nx.Graph()
     graph.add_weighted_edges_from(cr_table_network[network_name])
-    # Graph → DiGraph
+    # convert to directed graph
     graph = nx.to_directed(graph)
 
     return graph
 
-def calc_path_length(
-    graph: nx.DiGraph, 
-    path: List[int]
-    ) -> int:
+
+def calc_path_length(graph: nx.DiGraph, path: list[int]) -> int:
     """calculate path length"""
-    return sum(graph[u][v]['weight'] for u, v in zip(path[:-1], path[1:]))
+    path_length = 0
+    for i in range(len(path) - 1):
+        path_length += graph[path[i]][path[i + 1]]['weight']
+
+    return path_length
 
 
-def path_similarity(
+def calc_path_similarity(
     graph: nx.DiGraph, 
-    path1: List[int], 
-    path2: List[int]
+    path1: list[int], 
+    path2: list[int]
     ) -> float:
     """calculate path similarity"""
     edges_path1 = {(path1[i], path1[i + 1]) for i in range(len(path1) - 1)}
     edges_path2 = {(path2[i], path2[i + 1]) for i in range(len(path2) - 1)}
-
-    # reverse edge
-    # edges_path1.update({(a, b) for b, a in edges_path1})
-    # edges_path2.update({(a, b) for b, a in edges_path2})
 
     common_edges = sum([graph[a][b]['weight'] for a, b in edges_path1 & edges_path2])
     path1_edges = sum([graph[a][b]['weight'] for a, b in edges_path1])
@@ -93,7 +89,7 @@ def path_similarity(
     return similarity
 
 
-def is_edge_in_path(path: List[int], edge: tuple[int, int]) -> bool:
+def is_edge_in_path(path: list[int], edge: tuple[int, int]) -> bool:
     """judge whether edge is in path"""
     judge = False
     for i in range(len(path) - 1):
@@ -103,10 +99,8 @@ def is_edge_in_path(path: List[int], edge: tuple[int, int]) -> bool:
     return judge
 
 
-def judge_common_edges(path1: List[int], path2: List[int]) -> bool:
-    """
-    judge whether two paths have common edges
-    """
+def judge_common_edges(path1: list[int], path2: list[int]) -> bool:
+    """judge whether two paths have common edges"""
     judge = False
     for i in range(len(path1) - 1):
         for j in range(len(path2) - 1):
@@ -116,10 +110,10 @@ def judge_common_edges(path1: List[int], path2: List[int]) -> bool:
     return judge
 
 
-# graphのpickleファイルの作成
-if __name__ == "__main__":
-    for network_name in cr_table_network.keys():
-        graph = create_network(network_name)
-        full_path = GRAPH_DIR / f"{network_name}.pickle"
-        with open(full_path, 'wb') as f:
-            pickle.dump(graph, f)
+# # graphのpickleファイルの作成
+# if __name__ == "__main__":
+#     for network_name in cr_table_network.keys():
+#         graph = create_network(network_name)
+#         full_path = GRAPH_DIR / f"{network_name}.pickle"
+#         with open(full_path, 'wb') as f:
+#             pickle.dump(graph, f)

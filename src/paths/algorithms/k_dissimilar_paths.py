@@ -6,7 +6,7 @@ import networkx as nx
 from gurobipy import Model, GRB, quicksum
 from itertools import combinations
 from src.paths.algorithms.base_algorithm import BasePathAlgorithm
-from src.utils.graph import path_similarity, calc_path_length
+from src.utils.graph import calc_path_similarity, calc_path_length
 
 
 class KDissimilarPaths(BasePathAlgorithm):
@@ -50,7 +50,7 @@ class KDissimilarPaths(BasePathAlgorithm):
 
         # 選んだパス集合の類似度の合計です。
         model.addConstr(
-            theta == quicksum(path_similarity(self.graph, paths[i], paths[j]) * y[i, j] for i, j in path_pairs),
+            theta == quicksum(calc_path_similarity(self.graph, paths[i], paths[j]) * y[i, j] for i, j in path_pairs),
             "theta_definition"
         )
 

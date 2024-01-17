@@ -9,7 +9,7 @@ from itertools import combinations
 from src.paths.algorithms.base_algorithm import BasePathAlgorithm
 from src.paths.algorithms.k_dissimilar_paths import KDissimilarPaths
 from src.paths.algorithms.k_shortest_paths import KShortestPaths
-from src.utils.graph import calc_path_length, path_similarity
+from src.utils.graph import calc_path_length, calc_path_similarity
 
 
 class KBalancedPath(BasePathAlgorithm):
@@ -66,7 +66,7 @@ class KBalancedPath(BasePathAlgorithm):
         # 類似度の制約
         model.addConstr(
             quicksum(
-                path_similarity(self.graph, paths[i], paths[j]) * y[i, j] for i, j in path_pairs
+                calc_path_similarity(self.graph, paths[i], paths[j]) * y[i, j] for i, j in path_pairs
                 ) <= alpha * theta_min + (1 - alpha) * theta_max, 
             "theta_definition"
         )

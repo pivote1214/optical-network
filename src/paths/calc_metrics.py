@@ -6,7 +6,7 @@ import os
 import numpy as np
 import networkx as nx
 import pickle
-from src.utils.graph import calc_path_length, path_similarity
+from src.utils.graph import calc_path_length, calc_path_similarity
 from src.utils.paths import RESULT_DIR
 
 
@@ -40,7 +40,7 @@ def calc_avg_path_sim(
     パスの類似度の平均を計算する関数
     """
     similarity_sum = sum(
-        sum(path_similarity(graph, paths[key][i], paths[key][j]) 
+        sum(calc_path_similarity(graph, paths[key][i], paths[key][j]) 
             for i in range(len(paths[key]))
             for j in range(i + 1, len(paths[key]))) 
         for key in paths.keys()
