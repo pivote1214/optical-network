@@ -4,7 +4,6 @@ from typing import List
 
 import pickle
 import networkx as nx
-import matplotlib.pyplot as plt
 
 from src.utils.paths import GRAPH_DIR
 
@@ -42,7 +41,7 @@ cr_table_network = {
                     'EURO16': EURO16
                     }
 
-def load_network(network_name: str) -> nx.Graph:
+def load_network(network_name: str) -> nx.DiGraph:
     """load graph from pickle file"""
     full_path = GRAPH_DIR / f"{network_name}.pickle"
     with open(full_path, 'rb') as f:
@@ -50,38 +49,37 @@ def load_network(network_name: str) -> nx.Graph:
         
     return graph
 
-def create_network(network_name: str) -> nx.Graph:
+def create_network(network_name: str) -> nx.DiGraph:
     """
-    グラフを作成する関数
+    create graph from network name
     """
     graph = nx.Graph()
     graph.add_weighted_edges_from(cr_table_network[network_name])
+    # Graph → DiGraph
+    graph = nx.to_directed(graph)
 
     return graph
 
 def calc_path_length(
-    graph: nx.Graph, 
+    graph: nx.DiGraph, 
     path: List[int]
     ) -> int:
-    """
-    与えられたパスの長さを計算する関数
-    """
+    """calculate path length"""
     return sum(graph[u][v]['weight'] for u, v in zip(path[:-1], path[1:]))
 
 
 def path_similarity(
-    graph: nx.Graph, 
+    graph: nx.DiGraph, 
     path1: List[int], 
     path2: List[int]
     ) -> float:
-    """
-    2つのパスの類似度を計算する関数
-    """
+    """calculate path similarity"""
     edges_path1 = {(path1[i], path1[i + 1]) for i in range(len(path1) - 1)}
     edges_path2 = {(path2[i], path2[i + 1]) for i in range(len(path2) - 1)}
 
-    edges_path1.update({(a, b) for b, a in edges_path1})
-    edges_path2.update({(a, b) for b, a in edges_path2})
+    # reverse edge
+    # edges_path1.update({(a, b) for b, a in edges_path1})
+    # edges_path2.update({(a, b) for b, a in edges_path2})
 
     common_edges = sum([graph[a][b]['weight'] for a, b in edges_path1 & edges_path2])
     path1_edges = sum([graph[a][b]['weight'] for a, b in edges_path1])
@@ -96,12 +94,10 @@ def path_similarity(
 
 
 def is_edge_in_path(path: List[int], edge: tuple[int, int]) -> bool:
-    """
-    エッジがパスに含まれるかどうかを判定する関数
-    """
+    """judge whether edge is in path"""
     judge = False
     for i in range(len(path) - 1):
-        if (path[i], path[i + 1]) == edge or (path[i + 1], path[i]) == edge:
+        if (path[i], path[i + 1]) == edge:
             judge = True
 
     return judge
@@ -114,10 +110,7 @@ def judge_common_edges(path1: List[int], path2: List[int]) -> bool:
     judge = False
     for i in range(len(path1) - 1):
         for j in range(len(path2) - 1):
-            if (path1[i], path1[i + 1]) == (path2[j], path2[j + 1]) or \
-               (path1[i], path1[i + 1]) == (path2[j + 1], path2[j]) or \
-               (path1[i + 1], path1[i]) == (path2[j], path2[j + 1]) or \
-               (path1[i + 1], path1[i]) == (path2[j + 1], path2[j]):
+            if (path1[i], path1[i + 1]) == (path2[j], path2[j + 1]):
                 judge = True
 
     return judge

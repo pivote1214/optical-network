@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Dict, Tuple, List, Any
+from typing import Dict, Any
 
 import pickle
 import gurobipy as gp
@@ -72,7 +72,7 @@ if __name__ == "__main__":
     graph = load_network(network_name)
 
     # パラメータの定義
-    path_nums_list = [i for i in range(1, 6)]
+    path_nums_list = [i for i in range(2, 4)]
     algorithm_list = ["kSP", "kDP", "kSPwLO"]
     alpha_list = [round(0.1 * i, 2) for i in range(1, 10)]
 

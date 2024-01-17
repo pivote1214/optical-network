@@ -1,5 +1,6 @@
 import os
 import pickle
+from tkinter import TRUE
 import gurobipy as gp
 import pandas as pd
 
@@ -24,16 +25,16 @@ if __name__ == "__main__":
 
     # set parameters
     model_name              = 'RSA_PATH_CHANNEL'
-    network_name            = 'NSF'
+    network_name            = 'EURO16'
     graph                   = load_network(network_name)
     num_slots               = 320
     num_demands             = 100
     demands_population      = [50, 100, 150, 200]
-    demands_seeds_values    = [seed * 12 for seed in range(1, 11)]
-    k_values                = [2, 3]
+    demands_seeds_values    = [seed * 2 for seed in range(1, 11)]
+    k_values                = [2]
     path_algo_infos         = [('kSP', None), ('kSPwLO', 0.3)]
     bound_algo              = True
-    TIMELIMIT               = 3600
+    TIMELIMIT               = 3600.0
 
     # write global config
     with open(RESULT_DIR / f'experiment{experiment_num}/global_config.txt', 'w') as f:
@@ -85,16 +86,6 @@ if __name__ == "__main__":
                 algo_column = f'{path_algo_name}_{alpha}'
                 # write result to result_table
                 if lower_bound_output is not None:
-                    # write main model result to result_table
-                    result_table.loc[(k, demands_seeds), 
-                                    ('used_slots', algo_column)] = \
-                                        int(main_model_output.used_slots)
-                    result_table.loc[(k, demands_seeds), 
-                                    ('Gap(main)', algo_column)] = \
-                                        round(main_model_output.gap * 100, 2)
-                    result_table.loc[(k, demands_seeds), 
-                                    ('time(main)', algo_column)] = \
-                                        round(main_model_output.calculation_time, 3)
                     # write lower bound result to result_table
                     result_table.loc[(k, demands_seeds), 
                                     ('lower_bound', algo_column)] = \
@@ -115,8 +106,18 @@ if __name__ == "__main__":
                     result_table.loc[(k, demands_seeds), 
                                     ('time(upper)', algo_column)] = \
                                         round(upper_bound_output.calculation_time, 3)
-                    # save result_table
-                    result_table.to_csv(RESULT_DIR / f'experiment{experiment_num}' / 'result_table.csv')
+                # write main model result to result_table
+                result_table.loc[(k, demands_seeds), 
+                                ('used_slots', algo_column)] = \
+                                    int(main_model_output.used_slots)
+                result_table.loc[(k, demands_seeds), 
+                                ('Gap(main)', algo_column)] = \
+                                    round(main_model_output.gap * 100, 2)
+                result_table.loc[(k, demands_seeds), 
+                                ('time(main)', algo_column)] = \
+                                    round(main_model_output.calculation_time, 3)
+                # save result_table
+                result_table.to_csv(RESULT_DIR / f'experiment{experiment_num}' / 'result_table.csv')
 
                 # save outputs
                 for dir_name in ['main_model', 'lower_bound', 'upper_bound']:
