@@ -1,4 +1,4 @@
-from typing import Dict, List, Tuple, Optional
+from typing import Optional
 
 import time
 import gurobipy as gp
@@ -7,13 +7,13 @@ from dataclasses import dataclass
 
 @dataclass(frozen=True)
 class PathChannelInput:
-    E:              Dict[int, Tuple[int, int]]
-    S:              List[int]
-    D:              Dict[int, Tuple[int, int, int]]
-    P:              Dict[int, List[List[int]]]
-    C:              Dict[Tuple[int, int], List[List[int]]]
-    delta:          Dict[Tuple[int, int, int], int]
-    gamma:          Dict[Tuple[int, int, int, int], int]
+    E:              dict[int, tuple[int, int]]
+    S:              list[int]
+    D:              dict[int, tuple[int, int, int]]
+    P:              dict[int, list[list[int]]]
+    C:              dict[tuple[int, int], list[list[int]]]
+    delta:          dict[tuple[int, int, int], int]
+    gamma:          dict[tuple[int, int, int, int], int]
     lower_bound:    int = None
     TIMELIMIT:      int = 600
 
@@ -24,18 +24,18 @@ class PathChannelOutput:
     objective:          Optional[float]
     used_slots:         Optional[int]
     gap:                Optional[float]
-    x:                  Dict[Tuple[int, int, int], int]
-    y_es:               Dict[Tuple[int, int], int]
-    y_s:                Dict[int, int]
+    x:                  dict[tuple[int, int, int], int]
+    y_es:               dict[tuple[int, int], int]
+    y_s:                dict[int, int]
 
 
 class PathChannelVariable:
     def __init__(self, input: PathChannelInput, problem: gp.Model):
         self.input:     PathChannelInput                    = input
         self.problem:   gp.Model                            = problem
-        self.x:         Dict[Tuple[int, int, int], gp.Var]  = {}
-        self.y_es:      Dict[Tuple[int, int], gp.Var]       = {}
-        self.y_s:       Dict[int, gp.Var]                   = {}
+        self.x:         dict[tuple[int, int, int], gp.Var]  = {}
+        self.y_es:      dict[tuple[int, int], gp.Var]       = {}
+        self.y_s:       dict[int, gp.Var]                   = {}
 
         self._set_variable()
 

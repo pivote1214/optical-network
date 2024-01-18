@@ -1,5 +1,3 @@
-from typing import Dict, List, Tuple
-
 import time
 import gurobipy as gp
 from dataclasses import dataclass
@@ -7,12 +5,12 @@ from dataclasses import dataclass
 
 @dataclass(frozen=True)
 class PathLowerBoundInput:
-    E:          Dict[int, Tuple[int, int]]
-    S:          List[int]
-    D:          Dict[int, Tuple[int, int, int]]
-    P:          Dict[int, List[List[int]]]
-    num_slots:  Dict[Tuple[int, int], int]
-    delta:      Dict[Tuple[int, int, int], int]
+    E:          dict[int, tuple[int, int]]
+    S:          list[int]
+    D:          dict[int, tuple[int, int, int]]
+    P:          dict[int, list[list[int]]]
+    num_slots:  dict[tuple[int, int], int]
+    delta:      dict[tuple[int, int, int], int]
 
 
 @dataclass(frozen=True)
@@ -20,7 +18,7 @@ class PathLowerBoundOutput:
     calculation_time:   float
     lower_bound:        int
     gap:                float
-    x:                  Dict[Tuple[int, int], int]
+    x:                  dict[tuple[int, int], int]
     F_use:              int
 
 
@@ -28,7 +26,7 @@ class PathLowerBoundVariable:
     def __init__(self, input: PathLowerBoundInput, problem: gp.Model):
         self.input:     PathLowerBoundInput             = input
         self.problem:   gp.Model                        = problem
-        self.x:         Dict[Tuple[int, int], gp.Var]   = {}
+        self.x:         dict[tuple[int, int], gp.Var]   = {}
         self.F_use:     gp.Var                          = None
 
         self._set_variable()
@@ -140,5 +138,3 @@ class PathLowerBoundModel(PathLowerBoundObjectiveFunction, PathLowerBoundConstra
         )
 
         return self.output
-
-        

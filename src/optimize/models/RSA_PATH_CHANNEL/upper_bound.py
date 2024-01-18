@@ -1,24 +1,19 @@
-import pprint
-from typing import Dict, List, Tuple
-
 import time
 import gurobipy as gp
 from dataclasses import dataclass
-
-from matplotlib.pylab import f
 
 from src.utils.graph import judge_common_edges
 
 
 @dataclass(frozen=True)
 class PathUpperBoundInput:
-    E:          Dict[int, Tuple[int, int]]
-    S:          List[int]
-    D:          Dict[int, Tuple[int, int, int]]
-    P:          Dict[int, List[List[int]]]
-    num_slots:  Dict[Tuple[int, int], int]
-    delta:      Dict[Tuple[int, int, int], int]
-    x:          Dict[Tuple[int, int], int]
+    E:          dict[int, tuple[int, int]]
+    S:          list[int]
+    D:          dict[int, tuple[int, int, int]]
+    P:          dict[int, list[list[int]]]
+    num_slots:  dict[tuple[int, int], int]
+    delta:      dict[tuple[int, int, int], int]
+    x:          dict[tuple[int, int], int]
     F_use:      int
     M:          int
 
@@ -28,8 +23,8 @@ class PathUpperBoundOutput:
     calculation_time:   float
     upper_bound:        int
     gap:                float
-    o:                  Dict[Tuple[int, int], int]
-    f:                  Dict[int, int]
+    o:                  dict[tuple[int, int], int]
+    f:                  dict[int, int]
     F_max:              int
 
 
@@ -37,8 +32,8 @@ class PathUpperBoundVariable:
     def __init__(self, input: PathUpperBoundInput, problem: gp.Model):
         self.input:     PathUpperBoundInput             = input
         self.problem:   gp.Model                        = problem
-        self.o:         Dict[Tuple[int, int], gp.Var]   = {}
-        self.f:         Dict[int, gp.Var]               = {}
+        self.o:         dict[tuple[int, int], gp.Var]   = {}
+        self.f:         dict[int, gp.Var]               = {}
         self.F_max:     gp.Var                          = None
 
         self._set_variable()

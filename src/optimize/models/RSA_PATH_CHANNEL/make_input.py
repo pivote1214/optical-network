@@ -1,7 +1,3 @@
-from __future__ import annotations
-
-from typing import Dict, List
-
 import pickle
 import numpy as np
 
@@ -38,9 +34,9 @@ def make_input_lower(params: Parameter) -> PathLowerBoundInput:
 
 
 def make_channels(
-    S: List[int], 
-    num_slots: Dict[tuple[int, int], int]
-    ) -> Dict[tuple[int, int], List[List[int]]]:
+    S: list[int], 
+    num_slots: dict[tuple[int, int], int]
+    ) -> dict[tuple[int, int], list[list[int]]]:
     """Generate channel set"""
     max_slot = len(S)
     channels = {}
@@ -52,11 +48,11 @@ def make_channels(
 
 
 def calculate_gamma(
-    S: List[int], 
-    D: Dict[int, tuple[int, int, int]], 
-    P: Dict[int, List[List[int]]], 
-    C: Dict[tuple[int, int], List[List[int]]], 
-    ) -> Dict[tuple[int, int, int, int], int]:
+    S: list[int], 
+    D: dict[int, tuple[int, int, int]], 
+    P: dict[int, list[list[int]]], 
+    C: dict[tuple[int, int], list[list[int]]], 
+    ) -> dict[tuple[int, int, int, int], int]:
     """calculate gamma (channel contains slice or not)"""
     gamma = {}
     for d_ind, _ in D.items():
@@ -69,9 +65,9 @@ def calculate_gamma(
 
 
 def _make_path(
-    D: Dict[int, tuple[int, int, int]], 
-    all_paths: Dict[tuple(int, int), List[List[int]]]
-    ) -> Dict[int, List[List[int]]]:
+    D: dict[int, tuple[int, int, int]], 
+    all_paths: dict[tuple(int, int), list[list[int]]]
+    ) -> dict[int, list[list[int]]]:
     """Generate path set"""
     path_set = {}
     for d_ind in D.keys():
@@ -83,9 +79,9 @@ def _make_path(
 
 def _make_num_slots(
     params: Parameter, 
-    D: Dict[int, tuple[int, int, int]], 
-    P: Dict[int, List[List[int]]]
-    ) -> tuple[Dict[tuple[int, int], int]]:
+    D: dict[int, tuple[int, int, int]], 
+    P: dict[int, list[list[int]]]
+    ) -> tuple[dict[tuple[int, int], int]]:
     """Generate channel set"""
     num_slots = {}
     for d_ind, demand in D.items():
@@ -101,7 +97,7 @@ def _make_num_slots(
     return num_slots
 
 
-def _calc_candidate_channel(slot_num: int, max_slot: int) -> List[List[int]]:
+def _calc_candidate_channel(slot_num: int, max_slot: int) -> list[list[int]]:
     """Calculate candidate channels"""
     channels = []
     for i in range(max_slot - slot_num + 1):
@@ -150,8 +146,8 @@ def _calc_required_slots(
 def _calculate_delta(
     E: dict[int, tuple[int, int]], 
     D: dict[int, tuple[int, int, int]], 
-    P: dict[int, List[List[int]]]
-    ) -> Dict[tuple[int, int, int], int]:
+    P: dict[int, list[list[int]]]
+    ) -> dict[tuple[int, int, int], int]:
     """calculate delta (path contains edge or not)"""
     delta = {}
     for e_ind, edge in E.items():

@@ -1,6 +1,4 @@
-from __future__ import annotations
-
-from typing import Tuple, Optional
+from typing import Optional
 
 from src.optimize.params import Parameter
 from src.optimize.models.RSA_PATH_CHANNEL.make_input import make_input_lower, make_channels, calculate_gamma
@@ -14,7 +12,7 @@ class PathChannelOptimizer:
         self.params:    Parameter               = params
         self.input:     PathLowerBoundInput     = self._make_input()
 
-    def run(self) -> Tuple[PathChannelOutput, Optional[PathLowerBoundOutput], Optional[PathUpperBoundOutput]]:
+    def run(self) -> tuple[PathChannelOutput, Optional[PathLowerBoundOutput], Optional[PathUpperBoundOutput]]:
         if self.params.bound_algo:
             return self._run_with_bound_algo()
         else:
@@ -24,7 +22,7 @@ class PathChannelOptimizer:
         input = make_input_lower(self.params)
         return input
 
-    def _run_with_bound_algo(self) -> Tuple[PathChannelOutput, PathLowerBoundOutput, PathUpperBoundOutput]:
+    def _run_with_bound_algo(self) -> tuple[PathChannelOutput, PathLowerBoundOutput, PathUpperBoundOutput]:
         lower_bound_output = self._solve_lower_bound()
         upper_bound_output = self._solve_upper_bound()
         upper_bound = int(upper_bound_output.upper_bound)
@@ -54,7 +52,7 @@ class PathChannelOptimizer:
 
         return main_model_output, lower_bound_output, upper_bound_output
 
-    def _run_without_bound_algo(self) -> Tuple[PathChannelOutput, None, None]:
+    def _run_without_bound_algo(self) -> tuple[PathChannelOutput, None, None]:
         # make main model input
         S = list(range(self.params.num_slots))
         C = make_channels(

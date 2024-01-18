@@ -1,6 +1,4 @@
-from __future__ import annotations
-
-from typing import Dict, Any
+from typing import Any
 
 import pickle
 import gurobipy as gp
@@ -19,7 +17,7 @@ def generate_all_paths(
     path_nums: int, 
     length_limit: int = 6300, 
     alpha: float = None
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
     """generate all paths with given algorithm"""
     graph = load_network(network_name)
 
@@ -68,11 +66,11 @@ if __name__ == "__main__":
     # ダミー
     graph = gp.Model()
     # グラフの定義
-    network_name = "NSF"
+    network_name = "EURO16"
     graph = load_network(network_name)
 
     # パラメータの定義
-    path_nums_list = [i for i in range(2, 4)]
+    path_nums_list = [i for i in range(1, 6)]
     algorithm_list = ["kSP", "kDP", "kSPwLO"]
     alpha_list = [round(0.1 * i, 2) for i in range(1, 10)]
 
