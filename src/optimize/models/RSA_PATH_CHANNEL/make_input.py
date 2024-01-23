@@ -66,7 +66,7 @@ def calculate_gamma(
 
 def _make_path(
     D: dict[int, tuple[int, int, int]], 
-    all_paths: dict[tuple(int, int), list[list[int]]]
+    all_paths: dict[tuple[int, int], list[list[int]]]
     ) -> dict[int, list[list[int]]]:
     """Generate path set"""
     path_set = {}

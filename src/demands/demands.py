@@ -37,7 +37,7 @@ if __name__ == "__main__":
     from src.utils.paths import DATA_DIR
 
     graph = load_network("NSF")
-    n_demands = 5
+    n_demands = 100
     populations = [50, 100, 150, 200]
     for seed in range(1, 11):
         demands = gen_all_demands_offline(graph, n_demands, populations, seed*12)
