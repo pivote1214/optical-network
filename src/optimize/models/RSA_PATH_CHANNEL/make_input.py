@@ -90,7 +90,7 @@ def _make_num_slots(
             path_length = calc_path_length(params.graph, path)
             modulation_format = _select_modulation_format(path_length)
             # calculate required slots
-            required_slots = _calc_required_slots(demand[2], modulation_format, 
+            required_slots = calc_required_slots(demand[2], modulation_format, 
                                                   params.W, params.TRAFFIC_BPSK)
             num_slots[d_ind, p_ind] = required_slots
 
@@ -125,7 +125,7 @@ def _select_modulation_format(path_length: int) -> int:
     return modulation_format
 
 
-def _calc_required_slots(
+def calc_required_slots(
     demand_size: float, 
     modulation_format: int, 
     W: dict[str, float], 
