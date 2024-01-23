@@ -16,7 +16,8 @@ class KShortestPaths(BasePathAlgorithm):
         )
         simple_paths = [path for path in simple_paths 
                         if calc_path_length(self.graph, path) <= self.length_limit]
-        k_paths = sorted(simple_paths, key=lambda path: calc_path_length(self.graph, path))[:self.path_nums]
+        k_paths = sorted(simple_paths, 
+                         key=lambda path: (len(path), calc_path_length(self.graph, path)))[:self.path_nums]
 
         similarity_sum = sum(
             calc_path_similarity(self.graph, k_paths[i], k_paths[j])

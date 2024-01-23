@@ -71,7 +71,8 @@ if __name__ == "__main__":
 
     # パラメータの定義
     path_nums_list = [i for i in range(1, 6)]
-    algorithm_list = ["kSP", "kDP", "kSPwLO"]
+    algorithm_list = ["kSP"]
+    # algorithm_list = ["kSP", "kDP", "kSPwLO"]
     alpha_list = [round(0.1 * i, 2) for i in range(1, 10)]
 
     for path_nums in tqdm.tqdm(path_nums_list):
