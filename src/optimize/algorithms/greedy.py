@@ -1,7 +1,3 @@
-import pickle
-import pprint
-import networkx as nx
-
 from src.utils.graph import load_network
 from src.demands.demands import gen_all_demands_offline
 from src.optimize.algorithms.channel_assign import first_fit
