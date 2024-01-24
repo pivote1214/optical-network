@@ -88,7 +88,7 @@ def _make_num_slots(
         for p_ind, path in enumerate(P[d_ind]):
             # select modulation format
             path_length = calc_path_length(params.graph, path)
-            modulation_format = _select_modulation_format(path_length)
+            modulation_format = select_modulation_format(path_length)
             # calculate required slots
             required_slots = calc_required_slots(demand[2], modulation_format, 
                                                   params.W, params.TRAFFIC_BPSK)
@@ -109,7 +109,7 @@ def _calc_candidate_channel(slot_num: int, max_slot: int) -> list[list[int]]:
     return channels
 
 
-def _select_modulation_format(path_length: int) -> int:
+def select_modulation_format(path_length: int) -> int:
     """Select modulation format"""
     if path_length <= 600:
         modulation_format = 4
