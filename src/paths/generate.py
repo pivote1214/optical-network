@@ -1,10 +1,11 @@
 from typing import Any
 
+import tqdm
 import pickle
 import gurobipy as gp
-import tqdm
-from src.utils.graph import load_network
+
 from src.utils.paths import PATHS_DIR
+from src.utils.graph import load_network
 from src.paths.calc_metrics import calc_all_metrics
 from src.paths.algorithms.k_shortest_paths import KShortestPaths
 from src.paths.algorithms.k_dissimilar_paths import KDissimilarPaths
