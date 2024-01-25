@@ -29,9 +29,7 @@ num_demands             = 500
 demands_population      = [50, 100, 150, 200]
 demands_seeds_values    = [seed * 12 for seed in range(1, 11)]
 k_values                = [2]
-# path_algo_infos         = [('kSP', None), ('kSPwLO', 0.3)]
-# bound_algo              = True
-# TIMELIMIT               = 3600
+
 
 for seed in demands_seeds_values:
     for k in k_values:
@@ -41,7 +39,6 @@ for seed in demands_seeds_values:
         result_network = greedy_RMLSA_offline(graph_name, num_slots, k, demands)
 
         assigned_slots = result_network.occupied
-        # pprint.pprint(assigned_slots)
         max_slots = 0
         for edge, slots in assigned_slots.items():
             for i in range(num_slots):
