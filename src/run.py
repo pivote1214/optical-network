@@ -24,7 +24,7 @@ if __name__ == "__main__":
 
     # set parameters
     model_name              = 'RSA_PATH_CHANNEL'
-    network_name            = 'NSF'
+    network_name            = 'EURO16'
     graph                   = load_network(network_name)
     num_slots               = 320
     num_demands             = 100
