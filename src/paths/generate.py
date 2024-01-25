@@ -38,6 +38,13 @@ def generate_all_paths(
 
     return all_paths
 
+def save_all_paths(file_dir: str, file_name: str, all_paths: dict[tuple[int, int], list[tuple[int]]]):
+    """save paths by pickle"""
+    if not os.path.exists(file_dir):
+        os.makedirs(file_dir)
+    with open(file_dir / file_name, "wb") as f:
+        pickle.dump(all_paths, f)
+
 
 if __name__ == "__main__":
     # dummy
@@ -59,14 +66,10 @@ if __name__ == "__main__":
                         graph_name, algorithm_name, path_nums, alpha=alpha
                         )
                     file_name = f"k={path_nums}_alpha={alpha}.pickle"
+                    save_all_paths(file_dir, file_name, all_pahts)
             else:
                 all_pahts = generate_all_paths(
                     graph_name, algorithm_name, path_nums
                     )
                 file_name = f"k={path_nums}.pickle"
-
-            # save
-            if not os.path.exists(file_dir):
-                os.makedirs(file_dir)
-            with open(file_dir / file_name, "wb") as f:
-                pickle.dump(all_pahts, f)
+                save_all_paths(file_dir, file_name, all_pahts)
