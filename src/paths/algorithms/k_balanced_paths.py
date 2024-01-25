@@ -78,7 +78,7 @@ class KBalancedPath(BasePathAlgorithm):
     def find_all_paths(
         self, 
         alpha: float
-        ) -> tuple[list[list[tuple[int]]], float]:
+        ) -> tuple[dict[tuple[int, int], list[tuple[int]]], float]:
         """method to find all paths between all nodes with k balanced paths algorithm"""
         start = time.time()
         all_paths = {}

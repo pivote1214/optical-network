@@ -4,7 +4,7 @@ from src.paths.algorithms.base_algorithm import BasePathAlgorithm
 from src.utils.graph import calc_path_length, calc_path_similarity
 
 
-class KShortestPaths(BasePathAlgorithm):
+class KShortestPathsHop(BasePathAlgorithm):
     def find_path_pair(
         self, 
         source: int, 
@@ -17,7 +17,7 @@ class KShortestPaths(BasePathAlgorithm):
         simple_paths = [path for path in simple_paths 
                         if calc_path_length(self.graph, path) <= self.length_limit]
         k_paths = sorted(simple_paths, 
-                         key=lambda path: calc_path_length(self.graph, path))[:self.path_nums]
+                         key=lambda path: (len(path), calc_path_length(self.graph, path)))[:self.path_nums]
 
         similarity_sum = sum(
             calc_path_similarity(self.graph, k_paths[i], k_paths[j])
