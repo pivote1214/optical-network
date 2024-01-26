@@ -31,7 +31,7 @@ if __name__ == "__main__":
     demands_population      = [50, 100, 150, 200]
     demands_seeds_values    = [seed * 12 for seed in range(1, 11)]
     k_values                = [2, 3]
-    path_algo_infos         = [('kSP', None), ('kSPwLO', 0.3)]
+    path_algo_infos         = [('kSP', None), ('kSP-hop', None), ('kSPwLO', 0.3)]
     bound_algo              = True
     TIMELIMIT               = 3600
 
