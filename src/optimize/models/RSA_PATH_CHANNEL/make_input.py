@@ -18,11 +18,15 @@ def make_input_lower(params: Parameter) -> PathLowerBoundInput:
                                 demands_population=params.demands_population, 
                                 seed=params.demands_seed)
     # load all paths
-    all_paths_dir = \
-        PATHS_DIR / params.network_name / f"{params.path_algo_name}_k={params.k}_alpha={params.alpha}.pickle"
+    if params.path_algo_name == "kSPwLO":
+        all_paths_dir = \
+            PATHS_DIR / params.network_name / params.path_algo_name / f"k={params.k}_alpha={params.alpha}.pickle"
+    else:
+        all_paths_dir = \
+            PATHS_DIR / params.network_name / params.path_algo_name / f"k={params.k}.pickle"
+    
     with open(all_paths_dir, mode="rb") as f:
-        paths_info = pickle.load(f)
-        all_paths = paths_info["paths"]
+        all_paths = pickle.load(f)
     # make path, num_slots, channel and delta
     P           = _make_path(D, all_paths)
     num_slots   = _make_num_slots(params, D, P)

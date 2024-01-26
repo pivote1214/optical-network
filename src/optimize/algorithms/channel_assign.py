@@ -33,7 +33,7 @@ def first_fit(
     for p_ind, path in enumerate(candidate_paths):
         if first_fit_slots[p_ind] is None:
             continue
-        if first_fit_slots[p_ind][0] < min_ind:
+        if first_fit_slots[p_ind][-1] < min_ind:
             selected_path_ind = p_ind
             min_ind = first_fit_slots[p_ind][0]
 
