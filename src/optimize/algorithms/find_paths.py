@@ -40,3 +40,16 @@ def kSPwLO(
         all_paths = pickle.load(f)
 
     return all_paths[source, target]
+
+def repeat_dijkstra(
+    optical_network: OpticalNetwork, 
+    k: int, 
+    beta: int,
+    source: int, 
+    target: int, 
+    ) -> list[list[int]]:
+    """Find all paths between source and target"""
+    with open(PATHS_DIR / optical_network.graph_name / "Repeat Dijkstra" / f"k={k}_beta={beta}.pickle", "rb") as f:
+        all_paths = pickle.load(f)
+
+    return all_paths[source, target]

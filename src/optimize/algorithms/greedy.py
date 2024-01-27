@@ -1,7 +1,7 @@
 from src.utils.graph import load_network
 from src.demands.demands import gen_all_demands_offline
 from src.optimize.algorithms.channel_assign import first_fit
-from src.optimize.algorithms.find_paths import k_shortest_paths, k_shortest_paths_hop, kSPwLO
+from src.optimize.algorithms.find_paths import k_shortest_paths, k_shortest_paths_hop, kSPwLO, repeat_dijkstra
 from src.optimize.algorithms.optical_network import OpticalNetwork
 
 
@@ -23,6 +23,8 @@ def greedy_RMLSA_offline(
             candidate_paths = k_shortest_paths_hop(optical_network, k, source, target)
         elif path_method == "kSPwLO":
             candidate_paths = kSPwLO(optical_network, k, alpha, source, target)
+        elif path_method == "Repeat Dijkstra":
+            candidate_paths = repeat_dijkstra(optical_network, k+2, 10, source, target)
         else:
             raise ValueError(f"path_method should be 'kSP', 'kSP-hop', or 'kSPwLO', but {path_method} is given")
         assined_slots = first_fit(optical_network, candidate_paths, demand_size)
@@ -31,14 +33,14 @@ def greedy_RMLSA_offline(
     return optical_network
 
 
-graph_name              = 'EURO16'
+graph_name              = 'NSF'
 graph                   = load_network(graph_name)
 num_slots               = 320
 num_demands             = 100
 demands_population      = [50, 100, 150, 200]
 demands_seeds_values    = [seed * 12 for seed in range(1, 11)]
 k_values                = [2, 3]
-path_methods            = ["kSP", "kSP-hop", "kSPwLO"]
+path_methods            = ["kSP", "kSP-hop", "kSPwLO", "Repeat Dijkstra"]
 
 for path_method in path_methods:
     for k in k_values:
