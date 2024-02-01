@@ -24,15 +24,15 @@ if __name__ == "__main__":
 
     # set parameters
     model_name              = 'RSA_PATH_CHANNEL'
-    network_name            = 'EURO16'
+    network_name            = 'NSF'
     graph                   = load_network(network_name)
     num_slots               = 320
-    num_demands             = 100
+    num_demands             = 400
     demands_population      = [50, 100, 150, 200]
     demands_seeds_values    = [seed * 12 for seed in range(1, 11)]
     k_values                = [2, 3]
-    path_algo_infos         = [('kSP', None), ('kSP-hop', None), ('kSPwLO', 0.3)]
-    bound_algo              = True
+    path_algo_infos         = [('kSP-hop', None), ('kSPwLO', 0.3)]
+    bound_algo              = "only"
     TIMELIMIT               = 3600
 
     # write global config
@@ -52,6 +52,9 @@ if __name__ == "__main__":
     # run
     metrics = ['used_slots', 'Gap(main)', 'time(main)', 
                'lower_bound', 'Gap(lower)', 'time(lower)', 
+               'upper_bound', 'Gap(upper)', 'time(upper)']
+    # run
+    metrics = ['lower_bound', 'Gap(lower)', 'time(lower)', 
                'upper_bound', 'Gap(upper)', 'time(upper)']
     algo_columns = [f'{algo}_{alpha}' for algo, alpha in path_algo_infos]
     # make multi-column
@@ -79,7 +82,8 @@ if __name__ == "__main__":
 
                 # run
                 optimizer = PathChannelOptimizer(params)
-                main_model_output, lower_bound_output, upper_bound_output = optimizer.run()
+                # main_model_output, lower_bound_output, upper_bound_output = optimizer.run()
+                lower_bound_output, upper_bound_output = optimizer.run()
 
                 # set column name
                 algo_column = f'{path_algo_name}_{alpha}'
@@ -105,23 +109,24 @@ if __name__ == "__main__":
                     result_table.loc[(k, demands_seeds), 
                                     ('time(upper)', algo_column)] = \
                                         round(upper_bound_output.calculation_time, 3)
-                # write main model result to result_table
-                result_table.loc[(k, demands_seeds), 
-                                ('used_slots', algo_column)] = \
-                                    int(main_model_output.used_slots)
-                result_table.loc[(k, demands_seeds), 
-                                ('Gap(main)', algo_column)] = \
-                                    round(main_model_output.gap * 100, 2)
-                result_table.loc[(k, demands_seeds), 
-                                ('time(main)', algo_column)] = \
-                                    round(main_model_output.calculation_time, 3)
+                # # write main model result to result_table
+                # result_table.loc[(k, demands_seeds), 
+                #                 ('used_slots', algo_column)] = \
+                #                     int(main_model_output.used_slots)
+                # result_table.loc[(k, demands_seeds), 
+                #                 ('Gap(main)', algo_column)] = \
+                #                     round(main_model_output.gap * 100, 2)
+                # result_table.loc[(k, demands_seeds), 
+                #                 ('time(main)', algo_column)] = \
+                #                     round(main_model_output.calculation_time, 3)
                 # save result_table
                 result_table.to_csv(RESULT_DIR / f'experiment{experiment_num}' / 'result_table.csv')
 
                 # save outputs
                 for dir_name in ['main_model', 'lower_bound', 'upper_bound']:
                     if dir_name == 'main_model':
-                        output = main_model_output
+                        # output = main_model_output
+                        output = None
                     elif dir_name == 'lower_bound':
                         output = lower_bound_output
                     elif dir_name == 'upper_bound':

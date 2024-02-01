@@ -172,13 +172,13 @@ class PathChannelModel(PathChannelObjectiveFunction, PathChannelConstraint):
         self.problem.Params.SolutionLimit = 1
         self.problem.optimize()
         # set time limit
-        self.problem.Params.TimeLimit = max(0, 600 - self.problem.getAttr(gp.GRB.Attr.Runtime))
+        self.problem.Params.TimeLimit = max(0, self.input.TIMELIMIT - self.problem.getAttr(gp.GRB.Attr.Runtime))
         self.problem.Params.SolutionLimit = oldSolutionLimit - self.problem.Params.SolutionLimit
         self.problem.optimize()
-        # set MIPGap
-        self.problem.Params.MIPGap = 0.05
-        self.problem.Params.TimeLimit = max(0, self.input.TIMELIMIT - self.problem.getAttr(gp.GRB.Attr.Runtime))
-        self.problem.optimize()
+        # # set MIPGap
+        # self.problem.Params.MIPGap = 0.05
+        # self.problem.Params.TimeLimit = max(0, self.input.TIMELIMIT - self.problem.getAttr(gp.GRB.Attr.Runtime))
+        # self.problem.optimize()
 
         # end!
         calculation_time = time.time() - start

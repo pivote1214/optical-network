@@ -24,9 +24,10 @@ def greedy_RMLSA_offline(
         elif path_method == "kSPwLO":
             candidate_paths = kSPwLO(optical_network, k, alpha, source, target)
         elif path_method == "Repeat Dijkstra":
-            candidate_paths = repeat_dijkstra(optical_network, k+2, 10, source, target)
+            candidate_paths = repeat_dijkstra(optical_network, k, 10, source, target)
         else:
             raise ValueError(f"path_method should be 'kSP', 'kSP-hop', or 'kSPwLO', but {path_method} is given")
+
         assined_slots = first_fit(optical_network, candidate_paths, demand_size)
         optical_network.renew(assined_slots)
 
@@ -36,7 +37,7 @@ def greedy_RMLSA_offline(
 graph_name              = 'NSF'
 graph                   = load_network(graph_name)
 num_slots               = 320
-num_demands             = 100
+num_demands             = 400
 demands_population      = [50, 100, 150, 200]
 demands_seeds_values    = [seed * 12 for seed in range(1, 11)]
 k_values                = [2, 3]

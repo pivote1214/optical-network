@@ -5,12 +5,12 @@ from src.optimize.algorithms.optical_network import OpticalNetwork
 from src.utils.graph import calc_path_length
 
 def repeat_dijkstra(
-    G: nx.DiGraph, 
+    network: nx.DiGraph, 
     k: int, 
     beta: int = 10
     ) -> dict[tuple[int, int], list[list[int]]]:
     """Find k paths between all pairs of nodes by repeating dijkstra"""
-    G = deepcopy(G)
+    G = deepcopy(network)
     nodes = list(G.nodes)
     edges = list(G.edges)
     
@@ -39,6 +39,7 @@ def repeat_dijkstra(
 
     for key, paths in all_paths.items():
         all_paths[key] = list(set(tuple(path) for path in paths))
-        all_paths[key] = [path for path in all_paths[key] if calc_path_length(G, path) <= 6300]
+        print(all_paths[key])
+        all_paths[key] = [path for path in all_paths[key] if calc_path_length(network, path) <= 6300]
 
     return all_paths

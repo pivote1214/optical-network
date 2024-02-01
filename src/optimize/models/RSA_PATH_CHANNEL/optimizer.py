@@ -13,8 +13,10 @@ class PathChannelOptimizer:
         self.input:     PathLowerBoundInput     = self._make_input()
 
     def run(self) -> tuple[PathChannelOutput, Optional[PathLowerBoundOutput], Optional[PathUpperBoundOutput]]:
-        if self.params.bound_algo:
+        if self.params.bound_algo == "with":
             return self._run_with_bound_algo()
+        elif self.params.bound_algo == "only":
+            return self._run_only_bound_algo()
         else:
             return self._run_without_bound_algo()
 
@@ -22,6 +24,12 @@ class PathChannelOptimizer:
         input = make_input_lower(self.params)
         return input
 
+    def _run_only_bound_algo(self) -> tuple[PathChannelOutput, PathLowerBoundOutput, PathUpperBoundOutput]:
+        lower_bound_output = self._solve_lower_bound()
+        upper_bound_output = self._solve_upper_bound()
+
+        return lower_bound_output, upper_bound_output
+    
     def _run_with_bound_algo(self) -> tuple[PathChannelOutput, PathLowerBoundOutput, PathUpperBoundOutput]:
         lower_bound_output = self._solve_lower_bound()
         upper_bound_output = self._solve_upper_bound()
