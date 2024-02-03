@@ -52,7 +52,7 @@ if __name__ == "__main__":
     graph = gp.Model()
 
     # parameter
-    graph_names = ["US24", "JPN12", "JPN25"]
+    graph_names = ['US24']
     path_nums_values = [i for i in range(1, 4)]
     algorithm_names = ["kSP", "kSP-hop", "kDP", "kSPwLO"]
     alpha_values = [round(0.1 * i, 2) for i in range(1, 10)]

@@ -116,10 +116,10 @@ JPN12 = {(1, 2, 593.3), (1, 4, 1256.4),
         (11, 12, 911.9)}
 
 
-cr_table_network = {'NSF': NSF, 
-                    'N6': N6, 
+cr_table_network = {'N6': N6, 
                     'N6S9': N6S9, 
                     'RING': RING, 
+                    'NSF': NSF, 
                     'EURO16': EURO16, 
                     'US24': US24, 
                     'JPN12': JPN12, 
