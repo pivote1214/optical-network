@@ -48,43 +48,34 @@ def save_all_paths(file_dir: str, file_name: str, all_paths: dict[tuple[int, int
 
 
 if __name__ == "__main__":
-    # # dummy
-    # graph = gp.Model()
-
-    # # parameter
-    # graph_name = "EURO16"
-    # graph = load_network(graph_name)
-    # path_nums_list = [i for i in range(1, 6)]
-    # algorithm_list = ["kSP", "kSP-hop", "kDP", "kSPwLO"]
-    # alpha_list = [round(0.1 * i, 2) for i in range(1, 10)]
-
-    # for path_nums in tqdm.tqdm(path_nums_list):
-    #     for algorithm_name in tqdm.tqdm(algorithm_list, leave=False):
-    #         file_dir = PATHS_DIR / graph_name / algorithm_name
-    #         if algorithm_name == "kSPwLO":
-    #             for alpha in tqdm.tqdm(alpha_list, leave=False):
-    #                 all_pahts = generate_all_paths(
-    #                     graph_name, algorithm_name, path_nums, alpha=alpha
-    #                     )
-    #                 file_name = f"k={path_nums}_alpha={alpha}.pickle"
-    #                 save_all_paths(file_dir, file_name, all_pahts)
-    #         else:
-    #             all_pahts = generate_all_paths(
-    #                 graph_name, algorithm_name, path_nums
-    #                 )
-    #             file_name = f"k={path_nums}.pickle"
-    #             save_all_paths(file_dir, file_name, all_pahts)
+    # dummy
+    graph = gp.Model()
 
     # parameter
-    graph_name = "NSF"
-    graph = load_network(graph_name)
-    path_nums_values = [i for i in range(1, 6)]
-    beta_values = [i for i in range(1, 11)]
-    algo_name = "Repeat Dijkstra"
+    graph_names = ["US24", "JPN12", "JPN25"]
+    path_nums_values = [i for i in range(1, 4)]
+    algorithm_names = ["kSP", "kSP-hop", "kDP", "kSPwLO"]
+    alpha_values = [round(0.1 * i, 2) for i in range(1, 10)]
 
-    for path_nums in tqdm.tqdm(path_nums_values):
-        for beta in tqdm.tqdm(beta_values, leave=False):
-            file_dir = PATHS_DIR / graph_name / algo_name
-            all_paths = repeat_dijkstra(graph, path_nums, beta)
-            file_name = f"k={path_nums}_beta={beta}.pickle"
-            save_all_paths(file_dir, file_name, all_paths)
+    # generate all paths
+    for graph_name in graph_names:
+        print(f"Generating all paths for {graph_name}...")
+        graph = load_network(graph_name)
+        for path_nums in tqdm.tqdm(path_nums_values):
+            for algorithm_name in tqdm.tqdm(algorithm_names, leave=False):
+                file_dir = PATHS_DIR / graph_name / algorithm_name
+                if algorithm_name == "kSPwLO":
+                    for alpha in tqdm.tqdm(alpha_values, leave=False):
+                        all_pahts = generate_all_paths(
+                            graph_name, algorithm_name, path_nums, alpha=alpha
+                            )
+                        file_name = f"k={path_nums}_alpha={alpha}.pickle"
+                        save_all_paths(file_dir, file_name, all_pahts)
+                else:
+                    all_pahts = generate_all_paths(
+                        graph_name, algorithm_name, path_nums
+                        )
+                    file_name = f"k={path_nums}.pickle"
+                    save_all_paths(file_dir, file_name, all_pahts)
+
+    print("All paths are generated.")
