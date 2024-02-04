@@ -18,7 +18,8 @@ if __name__ == "__main__":
 
     # set parameters
     model_name              = 'RSA_PATH_CHANNEL'
-    network_names           = ['NSF', 'EURO16', 'JPN12']
+    network_names           = ['NSF', 'JPN12', 'EURO16']
+    network_names           = ['EURO16']
     num_slots               = 320
     num_demands             = 100
     demands_population      = [50, 100, 150, 200]
@@ -50,6 +51,8 @@ if __name__ == "__main__":
         os.makedirs(EX_NET_DIR, exist_ok=True)
         graph = load_network(network_name)
         for k in k_values:
+            # if k == 2 and network_name == 'NSF':
+            #     continue
             FILE_NAME = f'result_table_k={k}.csv'
             # initialize result_table
             metrics = ['used_slots',  'Gap(main)',  'time(main)', 
@@ -59,8 +62,7 @@ if __name__ == "__main__":
             algo_columns = [f'{algo}_{alpha}' for algo, alpha in path_algo_infos]
             # make multi-column
             columns = pd.MultiIndex.from_product([metrics, algo_columns])
-            index = pd.MultiIndex.from_product([k_values, demands_seeds_values])
-            result_table = pd.DataFrame(index=index, columns=columns)
+            result_table = pd.DataFrame(index=demands_seeds_values, columns=columns)
             for demands_seeds in demands_seeds_values:
                 for path_algo_name, alpha in path_algo_infos:
                     whole_start = time.time()
@@ -78,10 +80,13 @@ if __name__ == "__main__":
                         bound_algo=bound_algo, 
                         TIMELIMIT=TIMELIMIT
                         )
-
-                    # optimize
-                    optimizer = PathChannelOptimizer(params)
-                    main_model_output, lower_bound_output, upper_bound_output = optimizer.run()
+                    try:
+                        # optimize
+                        optimizer = PathChannelOptimizer(params)
+                        main_model_output, lower_bound_output, upper_bound_output = optimizer.run()
+                    except Exception as e:
+                        print('Error:', e)
+                        continue
                     whole_time = time.time() - whole_start
 
                     # set column name
@@ -89,37 +94,37 @@ if __name__ == "__main__":
                     # write result to result_table
                     if lower_bound_output is not None:
                         # write lower bound result to result_table
-                        result_table.loc[(k, demands_seeds), 
+                        result_table.loc[demands_seeds, 
                                         ('lower_bound', algo_column)] = \
                                             int(lower_bound_output.lower_bound)
-                        result_table.loc[(k, demands_seeds), 
+                        result_table.loc[demands_seeds, 
                                         ('Gap(lower)', algo_column)] = \
                                             round(lower_bound_output.gap * 100, 2)
-                        result_table.loc[(k, demands_seeds), 
+                        result_table.loc[demands_seeds, 
                                         ('time(lower)', algo_column)] = \
                                             round(lower_bound_output.calculation_time, 3)
                         # write upper bound result to result_table
-                        result_table.loc[(k, demands_seeds), 
+                        result_table.loc[demands_seeds, 
                                         ('upper_bound', algo_column)] = \
                                             int(upper_bound_output.upper_bound)
-                        result_table.loc[(k, demands_seeds), 
+                        result_table.loc[demands_seeds, 
                                         ('Gap(upper)', algo_column)] = \
                                             round(upper_bound_output.gap * 100, 2)
-                        result_table.loc[(k, demands_seeds), 
+                        result_table.loc[demands_seeds, 
                                         ('time(upper)', algo_column)] = \
                                             round(upper_bound_output.calculation_time, 3)
                     # write main model result to result_table
-                    result_table.loc[(k, demands_seeds), 
+                    result_table.loc[demands_seeds, 
                                     ('used_slots', algo_column)] = \
                                         int(main_model_output.used_slots)
-                    result_table.loc[(k, demands_seeds), 
+                    result_table.loc[demands_seeds, 
                                     ('Gap(main)', algo_column)] = \
                                         round(main_model_output.gap * 100, 2)
-                    result_table.loc[(k, demands_seeds), 
+                    result_table.loc[demands_seeds, 
                                     ('time(main)', algo_column)] = \
                                         round(main_model_output.calculation_time, 3)
                     # write whole time to result_table
-                    result_table.loc[(k, demands_seeds), 
+                    result_table.loc[demands_seeds, 
                                     ('time (all)', algo_column)] = \
                                         round(whole_time, 3)
                     # save result_table

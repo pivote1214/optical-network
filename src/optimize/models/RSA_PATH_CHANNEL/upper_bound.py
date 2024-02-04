@@ -157,7 +157,7 @@ class PathUpperBoundModel(PathUpperBoundObjectiveFunction, PathUpperBoundConstra
         self.problem.Params.SolutionLimit = 1
         self.problem.optimize()
         # set time limit
-        self.problem.Params.TimeLimit = max(0, 600 - self.problem.getAttr(gp.GRB.Attr.Runtime))
+        self.problem.Params.TimeLimit = max(0, 60 - self.problem.getAttr(gp.GRB.Attr.Runtime))
         self.problem.Params.SolutionLimit = oldSolutionLimit - self.problem.Params.SolutionLimit
         self.problem.optimize()
 
