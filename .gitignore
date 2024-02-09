@@ -49,8 +49,8 @@ test/
 # html
 *.html
 
-# pickle
-*.pickle
+# # pickle
+# *.pickle
 
 # pdf
 .pdf
