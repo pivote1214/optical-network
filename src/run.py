@@ -18,12 +18,12 @@ if __name__ == "__main__":
 
     # set parameters
     model_name              = 'RSA_PATH_CHANNEL'
-    network_names           = ['NSF', 'JPN12', 'EURO16']
+    network_names           = ['JPN12', 'NSF', 'EURO16']
     num_slots               = 320
     num_demands             = 100
     demands_population      = [50, 100, 150, 200]
     demands_seeds_values    = [seed * 2 for seed in range(1, 11)]
-    k_values                = [3]
+    k_values                = [2, 3]
     path_algo_infos         = [('kSP', None), ('kSP-hop', None), ('kSPwLO', 0.1), ('kSPwLO', 0.2), 
                                ('kSPwLO', 0.3), ('kSPwLO', 0.4), ('kSPwLO', 0.5), ('kSPwLO', 0.6), 
                                ('kSPwLO', 0.7), ('kSPwLO', 0.8), ('kSPwLO', 0.9), ('kDP', None)]
