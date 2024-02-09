@@ -130,15 +130,17 @@ class PathLowerBoundModel(PathLowerBoundObjectiveFunction, PathLowerBoundConstra
         # get lower bound
         if self.problem.SolCount == 0:
             lower_bound = None
+            gap = None
         else:
             lower_bound = self.variable.F_use
+            gap = self.problem.MIPGap
             x = self.variable.x
 
         # save result
         self.output = PathLowerBoundOutput(
             calculation_time=caculation_time,
             lower_bound=lower_bound, 
-            gap=self.problem.MIPGap, 
+            gap=gap, 
             x=x, 
             F_use=self.variable.F_use
         )

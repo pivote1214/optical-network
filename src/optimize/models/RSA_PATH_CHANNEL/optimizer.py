@@ -1,3 +1,4 @@
+import time
 from typing import Optional
 
 from src.optimize.params import Parameter
@@ -94,13 +95,23 @@ class PathChannelOptimizer:
         lower_bound_output = self._solve_lower_bound()
         if lower_bound_output.lower_bound is None:
             lower_bound = None
+            start = time.time()
             upper_bound = self._solve_first_fit()
-            pass
+            calculation_time = time.time() - start
+            upper_bound_output = PathUpperBoundOutput(
+                calculation_time=calculation_time, 
+                upper_bound=upper_bound, 
+                gap=None, 
+                o={}, 
+                f={}, 
+                F_max=0
+                )
         else:
             lower_bound = lower_bound_output.lower_bound
             upper_bound_output = self._solve_upper_bound()
             if upper_bound_output.upper_bound is None:
                 upper_bound = self._solve_first_fit()
+                upper_bound_output.upper_bound = upper_bound
             else:
                 upper_bound = int(upper_bound_output.upper_bound)
         
@@ -127,6 +138,8 @@ class PathChannelOptimizer:
         # run main model
         main_model = PathChannelModel(main_model_input)
         main_model_output = main_model.solve()
+        if main_model_output.used_slots is None:
+            main_model_output.used_slots = upper_bound
 
         return main_model_output, lower_bound_output, upper_bound_output
 
