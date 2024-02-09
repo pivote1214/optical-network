@@ -198,21 +198,21 @@ def judge_common_edges(path1: list[int], path2: list[int]) -> bool:
     return judge
 
 
-# # make graph pickle file
-# if __name__ == "__main__":
-#     print('Enter network name: ')
-#     print('Candidate: N6, N6S9, RING, NSF, EURO16, US24, JPN12, JPN25')
-#     target_network = list(input('Ex) NSF, EURO16:\n').split(', '))
-#     print('Creating graph pickle file...')
-#     for network_name in target_network:
-#         graph = create_network(network_name)
-#         for u in graph.nodes:
-#             for v in graph.nodes:
-#                 if u != v and nx.shortest_path_length(graph, u, v, weight='weight') > 6300:
-#                     print('Too long path!')
-#                     print('network_name: ', network_name)
-#                     print(u, v, nx.shortest_path_length(graph, u, v, weight='weight'))
+# make graph pickle file
+if __name__ == "__main__":
+    print('Enter network name: ')
+    print('Candidate: N6, N6S9, RING, NSF, EURO16, US24, JPN12, JPN25')
+    target_network = list(input('Ex) NSF, EURO16:\n').split(', '))
+    print('Creating graph pickle file...')
+    for network_name in target_network:
+        graph = create_network(network_name)
+        for u in graph.nodes:
+            for v in graph.nodes:
+                if u != v and nx.shortest_path_length(graph, u, v, weight='weight') > 6300:
+                    print('Too long path!')
+                    print('network_name: ', network_name)
+                    print(u, v, nx.shortest_path_length(graph, u, v, weight='weight'))
                         
-#         full_path = GRAPH_DIR / f"{network_name}.pickle"
-#         with open(full_path, 'wb') as f:
-#             pickle.dump(graph, f)
+        full_path = GRAPH_DIR / f"{network_name}.pickle"
+        with open(full_path, 'wb') as f:
+            pickle.dump(graph, f)

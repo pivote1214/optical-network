@@ -1,3 +1,4 @@
+import pprint
 from src.utils.graph import load_network
 from src.demands.demands import gen_all_demands_offline
 from src.optimize.algorithms.channel_assign import first_fit
@@ -15,7 +16,10 @@ def greedy_RMLSA_offline(
     ) -> OpticalNetwork:
     """Greedy RMLSA algorithm for static traffic"""
     optical_network = OpticalNetwork(graph_name, num_slots)
-    for d_ind in demands:
+    # sort demands by size -> dict[int, tuple[int, int, int]]
+    demands = sorted(demands.items(), key=lambda x: x[1][2], reverse=True)
+    demands = {i: d[1] for i, d in enumerate(demands)}
+    for d_ind in range(len(demands)):
         source, target, demand_size = demands[d_ind]
         if path_method == "kSP":
             candidate_paths = k_shortest_paths(optical_network, k, source, target)
@@ -37,11 +41,11 @@ def greedy_RMLSA_offline(
 graph_name              = 'NSF'
 graph                   = load_network(graph_name)
 num_slots               = 320
-num_demands             = 400
+num_demands             = 100
 demands_population      = [50, 100, 150, 200]
 demands_seeds_values    = [seed * 12 for seed in range(1, 11)]
-k_values                = [2, 3]
-path_methods            = ["kSP", "kSP-hop", "kSPwLO", "Repeat Dijkstra"]
+k_values                = [2]
+path_methods            = ["kSP", "kSP-hop", "kSPwLO"]
 
 for path_method in path_methods:
     for k in k_values:
@@ -49,6 +53,7 @@ for path_method in path_methods:
         print(f"k={k} path_method = {path_method}")
         for seed in demands_seeds_values:
             demands = gen_all_demands_offline(graph, num_demands, demands_population=demands_population, seed=seed)
+            
             result_network = greedy_RMLSA_offline(graph_name, num_slots, k, demands, path_method)
 
             assigned_slots = result_network.occupied

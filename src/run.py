@@ -19,7 +19,7 @@ if __name__ == "__main__":
     # set parameters
     model_name              = 'RSA_PATH_CHANNEL'
     network_names           = ['NSF', 'JPN12', 'EURO16']
-    network_names           = ['EURO16']
+    network_names           = ['NSF', 'JPN12']
     num_slots               = 320
     num_demands             = 100
     demands_population      = [50, 100, 150, 200]
@@ -51,9 +51,7 @@ if __name__ == "__main__":
         os.makedirs(EX_NET_DIR, exist_ok=True)
         graph = load_network(network_name)
         for k in k_values:
-            # if k == 2 and network_name == 'NSF':
-            #     continue
-            FILE_NAME = f'result_table_k={k}.csv'
+            FILE_NAME = f'result_table_k={k}_sub.csv'
             # initialize result_table
             metrics = ['used_slots',  'Gap(main)',  'time(main)', 
                        'lower_bound', 'Gap(lower)', 'time(lower)', 
@@ -64,6 +62,8 @@ if __name__ == "__main__":
             columns = pd.MultiIndex.from_product([metrics, algo_columns])
             result_table = pd.DataFrame(index=demands_seeds_values, columns=columns)
             for demands_seeds in demands_seeds_values:
+                if k == 2 and network_name == 'NSF' and demands_seeds <= 12:
+                    continue
                 for path_algo_name, alpha in path_algo_infos:
                     whole_start = time.time()
                     # set parameters
@@ -129,17 +129,3 @@ if __name__ == "__main__":
                                         round(whole_time, 3)
                     # save result_table
                     result_table.to_csv(EX_NET_DIR / FILE_NAME)
-
-                    # # save outputs
-                    # for dir_name in ['main_model', 'lower_bound', 'upper_bound']:
-                    #     if dir_name == 'main_model':
-                    #         # output = main_model_output
-                    #         output = None
-                    #     elif dir_name == 'lower_bound':
-                    #         output = lower_bound_output
-                    #     elif dir_name == 'upper_bound':
-                    #         output = upper_bound_output
-                    #     if output is not None:
-                    #         with open(RESULT_DIR / f'experiment{experiment_num}' / dir_name / \
-                    #             f'k={k}_seeds={demands_seeds}_path={algo_column}_alpha={alpha}.pickle', 'wb') as f:
-                    #             pickle.dump(output, f)
