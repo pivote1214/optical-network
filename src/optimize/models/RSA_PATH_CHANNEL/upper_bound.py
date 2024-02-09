@@ -7,15 +7,16 @@ from src.utils.graph import judge_common_edges
 
 @dataclass(frozen=True)
 class PathUpperBoundInput:
-    E:          dict[int, tuple[int, int]]
-    S:          list[int]
-    D:          dict[int, tuple[int, int, int]]
-    P:          dict[int, list[list[int]]]
-    num_slots:  dict[tuple[int, int], int]
-    delta:      dict[tuple[int, int, int], int]
-    x:          dict[tuple[int, int], int]
-    F_use:      int
-    M:          int
+    E:                  dict[int, tuple[int, int]]
+    S:                  list[int]
+    D:                  dict[int, tuple[int, int, int]]
+    P:                  dict[int, list[list[int]]]
+    num_slots:          dict[tuple[int, int], int]
+    delta:              dict[tuple[int, int, int], int]
+    x:                  dict[tuple[int, int], int]
+    F_use:              int
+    M:                  int
+    UPPER_TIMELIMIT:    float = 120.0
 
 
 @dataclass(frozen=True)
@@ -137,9 +138,7 @@ class PathUpperBoundModel(PathUpperBoundObjectiveFunction, PathUpperBoundConstra
 
     def _set_problem(self) -> None:
         self.problem = gp.Model(self.name)
-        # # ログを取らない
-        # self.problem.setParam(gp.GRB.Param.OutputFlag, False)
-
+        
         self.variable = PathUpperBoundVariable(input=self.input, problem=self.problem)
         self.problem = self.variable.set_variable()
 
@@ -151,20 +150,15 @@ class PathUpperBoundModel(PathUpperBoundObjectiveFunction, PathUpperBoundConstra
         
         # start!
         start = time.time()
-        
-        # find initial solution
-        oldSolutionLimit = self.problem.Params.SolutionLimit
-        self.problem.Params.SolutionLimit = 1
-        self.problem.optimize()
         # set time limit
-        self.problem.Params.TimeLimit = max(0, 60 - self.problem.getAttr(gp.GRB.Attr.Runtime))
-        self.problem.Params.SolutionLimit = oldSolutionLimit - self.problem.Params.SolutionLimit
+        self.problem.setParam(gp.GRB.Param.TimeLimit, self.input.UPPER_TIMELIMIT)
         self.problem.optimize()
-
         # end!
         calculation_time = time.time() - start
 
         self.variable.to_values()
+        if self.problem.SolCount == 0:
+            upper_bound = None
         upper_bound = self.variable.F_max
 
         # save result

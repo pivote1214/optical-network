@@ -14,6 +14,6 @@ class Parameter:
     path_algo_name:     str
     alpha:              float
     bound_algo:         str
-    TIMELIMIT:          int = 3600
+    TIMELIMIT:          float = 3600.0
     W:                  dict[str, float] = field(default_factory=lambda: {"OC": 37.5, "GB": 6.25, "FS": 12.5})
     TRAFFIC_BPSK:       float = 50

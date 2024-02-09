@@ -5,12 +5,13 @@ from dataclasses import dataclass
 
 @dataclass(frozen=True)
 class PathLowerBoundInput:
-    E:          dict[int, tuple[int, int]]
-    S:          list[int]
-    D:          dict[int, tuple[int, int, int]]
-    P:          dict[int, list[list[int]]]
-    num_slots:  dict[tuple[int, int], int]
-    delta:      dict[tuple[int, int, int], int]
+    E:                  dict[int, tuple[int, int]]
+    S:                  list[int]
+    D:                  dict[int, tuple[int, int, int]]
+    P:                  dict[int, list[list[int]]]
+    num_slots:          dict[tuple[int, int], int]
+    delta:              dict[tuple[int, int, int], int]
+    LOWER_TIMELIMIT:    float = 30.0
 
 
 @dataclass(frozen=True)
@@ -106,7 +107,6 @@ class PathLowerBoundModel(PathLowerBoundObjectiveFunction, PathLowerBoundConstra
 
     def _set_problem(self) -> None:
         self.problem = gp.Model(self.name)
-        # self.problem.setParam(gp.GRB.Param.OutputFlag, False)
 
         self.variable = PathLowerBoundVariable(input=self.input, problem=self.problem)
         self.problem = self.variable.set_variable()
@@ -117,6 +117,8 @@ class PathLowerBoundModel(PathLowerBoundObjectiveFunction, PathLowerBoundConstra
     def solve(self) -> PathLowerBoundOutput:
         self._set_problem()
         
+        # set time limit
+        self.problem.setParam(gp.GRB.Param.TimeLimit, self.input.LOWER_TIMELIMIT)
         # start!
         start = time.time()
         # optimize
@@ -125,8 +127,12 @@ class PathLowerBoundModel(PathLowerBoundObjectiveFunction, PathLowerBoundConstra
         caculation_time = time.time() - start
 
         self.variable.to_values()
-        lower_bound = self.variable.F_use
-        x = self.variable.x
+        # get lower bound
+        if self.problem.SolCount == 0:
+            lower_bound = None
+        else:
+            lower_bound = self.variable.F_use
+            x = self.variable.x
 
         # save result
         self.output = PathLowerBoundOutput(
