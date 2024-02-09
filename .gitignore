@@ -42,7 +42,6 @@ test/
 
 # yaml
 *.yaml
-*.yml
 
 # .DS_Store
 *.DS_Store
