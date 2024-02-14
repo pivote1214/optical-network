@@ -173,11 +173,10 @@ class PathChannelModel(PathChannelObjectiveFunction, PathChannelConstraint):
         calculation_time = time.time() - start
         
         # store result
-        if self.problem.Status == gp.GRB.INFEASIBLE:
-            self.objective = None
-            self.used_slots = None
+        if self.problem.Status == gp.GRB.INFEASIBLE or self.problem.SolCount == 0:
+            self.objective = len(self.input.S)
+            self.used_slots = len(self.input.S)
             self.gap = None
-            print("Infeasible")
         else:
             self.objective = self.problem.ObjVal
             self.variable.to_values()
