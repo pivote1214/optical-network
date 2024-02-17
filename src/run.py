@@ -29,6 +29,7 @@ if __name__ == "__main__":
                                ('kSPwLO', 0.7), ('kSPwLO', 0.8), ('kSPwLO', 0.9), ('kDP', None)]
     bound_algo              = "hybrid"
     TIMELIMIT               = 600.0
+    
 
     # make directory
     EX_DIR = RESULT_DIR / f'{model_name}/experiment_{experiment_num}'
@@ -95,9 +96,6 @@ if __name__ == "__main__":
                     optimizer = PathChannelOptimizer(params)
                     main_model_output, lower_bound_output, upper_bound_output = optimizer.run()
                     whole_time = time.time() - whole_start
-
-                    if main_model_output.gap is None:
-                        main_model_output.gap = upper_bound_output.gap
 
                     # write result to result_table
                     if lower_bound_output is not None:

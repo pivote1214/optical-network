@@ -1,9 +1,11 @@
 import os
+import time
 import tqdm
 import pickle
+import pandas as pd
 import gurobipy as gp
 
-from src.utils.paths import PATHS_DIR
+from src.utils.paths import PATHS_DIR, RESULT_DIR
 from src.utils.graph import load_network
 from src.paths.algorithms.repeat_dijkstra import repeat_dijkstra
 from src.paths.algorithms.k_shortest_paths import KShortestPaths
@@ -52,8 +54,8 @@ if __name__ == "__main__":
     graph = gp.Model()
 
     # parameter
-    graph_names = ['US24']
-    path_nums_values = [i for i in range(1, 4)]
+    graph_names = ["NSF", "EURO16", "JPN12"]
+    path_nums_values = [i for i in range(2, 4)]
     algorithm_names = ["kSP", "kSP-hop", "kDP", "kSPwLO"]
     alpha_values = [round(0.1 * i, 2) for i in range(1, 10)]
 
@@ -61,21 +63,29 @@ if __name__ == "__main__":
     for graph_name in graph_names:
         print(f"Generating all paths for {graph_name}...")
         graph = load_network(graph_name)
+        calc_time = pd.DataFrame(index=path_nums_values)
         for path_nums in tqdm.tqdm(path_nums_values):
             for algorithm_name in tqdm.tqdm(algorithm_names, leave=False):
                 file_dir = PATHS_DIR / graph_name / algorithm_name
                 if algorithm_name == "kSPwLO":
                     for alpha in tqdm.tqdm(alpha_values, leave=False):
+                        start = time.time()
                         all_pahts = generate_all_paths(
                             graph_name, algorithm_name, path_nums, alpha=alpha
                             )
+                        end = time.time()
+                        calc_time.loc[path_nums, f"{algorithm_name}_{alpha}"] = end - start
                         file_name = f"k={path_nums}_alpha={alpha}.pickle"
                         save_all_paths(file_dir, file_name, all_pahts)
                 else:
+                    start = time.time()
                     all_pahts = generate_all_paths(
                         graph_name, algorithm_name, path_nums
                         )
+                    end = time.time()
+                    calc_time.loc[path_nums, algorithm_name] = end - start
                     file_name = f"k={path_nums}.pickle"
                     save_all_paths(file_dir, file_name, all_pahts)
+        calc_time.to_csv(RESULT_DIR / "paths"/ f"{graph_name}_calc_time.csv")
 
     print("All paths are generated.")

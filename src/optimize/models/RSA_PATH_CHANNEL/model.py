@@ -15,7 +15,7 @@ class PathChannelInput:
     delta:          dict[tuple[int, int, int], int]
     gamma:          dict[tuple[int, int, int, int], int]
     lower_bound:    int = None
-    TIMELIMIT:      int = 600
+    TIMELIMIT:      int = 600.0
 
 
 @dataclass(frozen=True)
@@ -176,7 +176,7 @@ class PathChannelModel(PathChannelObjectiveFunction, PathChannelConstraint):
         if self.problem.Status == gp.GRB.INFEASIBLE or self.problem.SolCount == 0:
             self.objective = len(self.input.S)
             self.used_slots = len(self.input.S)
-            self.gap = None
+            self.gap = (self.objective - self.input.lower_bound) / self.input.lower_bound * 100
         else:
             self.objective = self.problem.ObjVal
             self.variable.to_values()
