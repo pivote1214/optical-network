@@ -116,30 +116,31 @@ def calc_all_metrics(
 
     return metrics
 
-network_names = ['NSF', 'EURO16', 'JPN12']
-algo_names = ['kSP-hop', 'kSP', 'kSPwLO', 'kDP']
-metrics = ['length_ave', 'hop_ave', 'similarity_ave']
-# initialize metrics_table
-for network_name in network_names:
-    graph = load_network(network_name)
-    metrics_table = pd.DataFrame()
-    for k in range(2, 4):
-        for algo_name in algo_names:
-            if algo_name == 'kSPwLO':
-                for alpha in np.arange(0.1, 1.0, 0.1):
-                    file_path = PATHS_DIR / network_name / algo_name / f'k={k}_alpha={round(alpha, 2)}.pickle'
-                    with open(PATHS_DIR/ 'NSF' / file_path, 'rb') as f:
+if __name__ == '__main__':
+    network_names = ['NSF', 'EURO16', 'JPN12']
+    algo_names = ['kSP-hop', 'kSP', 'kSPwLO', 'kDP']
+    metrics = ['length_ave', 'hop_ave', 'similarity_ave']
+    # initialize metrics_table
+    for network_name in network_names:
+        graph = load_network(network_name)
+        metrics_table = pd.DataFrame()
+        for k in range(2, 4):
+            for algo_name in algo_names:
+                if algo_name == 'kSPwLO':
+                    for alpha in np.arange(0.1, 1.0, 0.1):
+                        file_path = PATHS_DIR / network_name / algo_name / f'k={k}_alpha={round(alpha, 2)}.pickle'
+                        with open(PATHS_DIR/ 'NSF' / file_path, 'rb') as f:
+                            all_paths = pickle.load(f)
+                        all_metrics = calc_all_metrics(graph, all_paths)
+                        for metric in metrics:
+                            metrics_table.loc[f"k={k}_{algo_name}_{round(alpha, 2)}", metric] = all_metrics[metric]
+                else:
+                    file_path = PATHS_DIR / network_name / algo_name / f'k={k}.pickle'
+                    with open(PATHS_DIR / 'NSF' / file_path, 'rb') as f:
                         all_paths = pickle.load(f)
                     all_metrics = calc_all_metrics(graph, all_paths)
                     for metric in metrics:
-                        metrics_table.loc[f"k={k}_{algo_name}_{round(alpha, 2)}", metric] = all_metrics[metric]
-            else:
-                file_path = PATHS_DIR / network_name / algo_name / f'k={k}.pickle'
-                with open(PATHS_DIR / 'NSF' / file_path, 'rb') as f:
-                    all_paths = pickle.load(f)
-                all_metrics = calc_all_metrics(graph, all_paths)
-                for metric in metrics:
-                    metrics_table.loc[f"k={k}_{algo_name}", metric] = all_metrics[metric]
+                        metrics_table.loc[f"k={k}_{algo_name}", metric] = all_metrics[metric]
 
-    full_table_path = RESULT_DIR / 'paths' / f'{network_name}_metrics_table.csv'
-    metrics_table.to_csv(full_table_path)
+        full_table_path = RESULT_DIR / 'paths' / f'{network_name}_metrics_table.csv'
+        metrics_table.to_csv(full_table_path)

@@ -18,9 +18,10 @@ if __name__ == "__main__":
 
     # set parameters
     model_name              = 'RSA_PATH_CHANNEL'
-    network_names           = ['JPN12', 'NSF', 'EURO16']
+    # network_names           = ['JPN12', 'NSF', 'EURO16']
+    network_names           = ['EURO16']
     num_slots               = 320
-    num_demands             = 100
+    num_demands             = 120
     demands_population      = [50, 100, 150, 200]
     demands_seeds_values    = [seed * 2 for seed in range(1, 11)]
     k_values                = [2, 3]
@@ -52,23 +53,23 @@ if __name__ == "__main__":
         graph = load_network(network_name)
         for k in k_values:
             FILE_NAME = f'result_table_k={k}.csv'
-            result_table = pd.read_csv(EX_NET_DIR / FILE_NAME, index_col=0, header=[0, 1])
-            # # initialize result_table
-            # metrics = ['used_slots',  'Gap(main)',  'time(main)', 
-            #            'lower_bound', 'Gap(lower)', 'time(lower)', 
-            #            'upper_bound', 'Gap(upper)', 'time(upper)', 
-            #            'time (all)']
+            # result_table = pd.read_csv(EX_NET_DIR / FILE_NAME, index_col=0, header=[0, 1])
+            # initialize result_table
+            metrics = ['used_slots',  'Gap(main)',  'time(main)', 
+                       'lower_bound', 'Gap(lower)', 'time(lower)', 
+                       'upper_bound', 'Gap(upper)', 'time(upper)', 
+                       'time (all)']
             algo_columns = [f'{algo}_{alpha}' for algo, alpha in path_algo_infos]
             # make multi-column
-            # columns = pd.MultiIndex.from_product([metrics, algo_columns])
-            # result_table = pd.DataFrame(index=demands_seeds_values, columns=columns)
+            columns = pd.MultiIndex.from_product([metrics, algo_columns])
+            result_table = pd.DataFrame(index=demands_seeds_values, columns=columns)
             for demands_seed in demands_seeds_values:
                 for path_algo_name, alpha in path_algo_infos:
                     # set column name
                     algo_column = f'{path_algo_name}_{alpha}'
-                    # check if the result is already calculated
-                    if not pd.isnull(result_table.loc[demands_seed, ('used_slots', algo_column)]):
-                        continue
+                    # # check if the result is already calculated
+                    # if not pd.isnull(result_table.loc[demands_seed, ('used_slots', algo_column)]):
+                    #     continue
                     whole_start = time.time()
                     # set parameters
                     params = Parameter(
