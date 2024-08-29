@@ -1,0 +1,31 @@
+# python generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+
+# venv
+.venv
+
+# macOS specific files
+.DS_Store
+
+# Office files
+*.docx
+*.xlsx
+*.pptx
+
+# other files
+*.csv
+*.png
+*.txt
+*.tex
+*.pdf
+
+# Except CSV files in the data/ directory
+!data/network/*.csv
+
+# pickle files
+*.pkl

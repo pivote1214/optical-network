@@ -1,0 +1,29 @@
+[project]
+name = "optical-network"
+version = "0.1.0"
+description = "Optical Network"
+dependencies = [
+    "numpy>=2.1.0",
+    "pandas>=2.2.2",
+    "matplotlib>=3.9.2",
+    "networkx>=3.3",
+    "tqdm>=4.66.5",
+    "gurobipy>=11.0.3",
+    "ipykernel>=6.29.5",
+]
+readme = "README.md"
+requires-python = ">= 3.8"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.rye]
+managed = true
+dev-dependencies = []
+
+[tool.hatch.metadata]
+allow-direct-references = true
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/optical_network"]
