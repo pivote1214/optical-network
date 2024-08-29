@@ -23,9 +23,19 @@ wheels/
 *.txt
 *.tex
 *.pdf
+*.json
 
 # Except CSV files in the data/ directory
 !data/network/*.csv
 
 # pickle files
 *.pkl
+
+# gurobi
+*.lp
+*.rlp
+*.ilp
+*.mps
+*.opb
+*.cbf
+*.log
