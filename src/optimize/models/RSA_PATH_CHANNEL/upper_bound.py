@@ -1,6 +1,8 @@
+import os
 import time
-import gurobipy as gp
 from dataclasses import dataclass
+
+import gurobipy as gp
 
 from utils.network import judge_common_edges
 
@@ -104,9 +106,9 @@ class PathUpperBoundModel:
 
     def _set_problem(self) -> None:
         self.problem = gp.Model(self.name)
-        self.problem.params.OutputFlag = 1
-        # log file
-        self.problem.setParam(gp.GRB.Param.LogFile, f'{self.input.result_dir}/upper_bound_{self.input.demand_seed}.log')
+        # log to console: off, log file: on
+        self.problem.setParam('LogToConsole', 0)
+        self.problem.setParam('LogFile', os.path.join(self.input.result_dir, f'{self.input.demand_seed:02}_upper.log'))
         # set time limit
         self.problem.setParam(gp.GRB.Param.TimeLimit, self.input.timelimit)
 
@@ -119,14 +121,15 @@ class PathUpperBoundModel:
 
         # start!
         start = time.time()
-
+        # optimize
         self.problem.optimize()
         # end!
         calculation_time = time.time() - start
 
         # sol file
         if self.problem.SolCount > 0:
-            self.problem.write(f'{self.input.result_dir}/upper_bound_{self.input.demand_seed}.sol')
+            self.problem.write(os.path.join(self.input.result_dir, f'{self.input.demand_seed:02}_upper.sol'))
+        self.problem.write(os.path.join(self.input.result_dir, f'{self.input.demand_seed:02}_upper.json'))  
 
         # to values        
         self._to_values()

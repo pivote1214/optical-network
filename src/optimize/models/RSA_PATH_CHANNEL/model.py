@@ -1,7 +1,7 @@
-from typing import Optional
-
+import os
 import time
 from dataclasses import dataclass
+from typing import Optional
 
 import gurobipy as gp
 
@@ -114,7 +114,11 @@ class PathChannelModel:
 
     def _set_problem(self) -> None:
         self.problem = gp.Model(self.name)
-        self.problem.params.OutputFlag = 1
+        # log to console: off, log file: on
+        self.problem.setParam('LogToConsole', 0)
+        self.problem.setParam('LogFile', os.path.join(self.input.result_dir, f'{self.input.demand_seed:02}_main.log'))
+        # set time limit
+        self.problem.setParam(gp.GRB.Param.TimeLimit, self.input.timelimit)
 
         self._set_variables()
         self._set_objective_function()
@@ -131,17 +135,15 @@ class PathChannelModel:
         self._set_problem()
         # start!
         start = time.time()
-        # log file
-        self.problem.setParam(gp.GRB.Param.LogFile, f'{self.input.result_dir}/main_{self.input.demand_seed}.log')
-        # set time limit
-        self.problem.setParam(gp.GRB.Param.TimeLimit, self.input.timelimit)
+        # optimize
         self.problem.optimize()
         # end!
         calculation_time = time.time() - start
 
-        # sol file
+        # output files
         if self.problem.SolCount > 0:
-            self.problem.write(f'{self.input.result_dir}/main_{self.input.demand_seed}.sol')
+            self.problem.write(os.path.join(self.input.result_dir, f'{self.input.demand_seed:02}_main.sol'))
+        self.problem.write(os.path.join(self.input.result_dir, f'{self.input.demand_seed:02}_main.json'))
 
         # store result
         if self.problem.Status == gp.GRB.INFEASIBLE or self.problem.SolCount == 0:

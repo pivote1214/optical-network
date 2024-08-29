@@ -28,7 +28,7 @@ if __name__ == "__main__":
     demands_population      = [50, 100, 150, 200]
     demands_seeds_values    = [seed * 2 for seed in range(1, 11)]
     # set parameters (Path-parameter)
-    network_names  = ['JPN12', 'NSF', 'EURO16']
+    network_names           = ['JPN12', 'NSF', 'EURO16']
     path_algo_list          = ['k-shortest-paths', 
                                'k-dissimilar-paths', 
                                'k-shortest-paths-with-similarity-constraint', 

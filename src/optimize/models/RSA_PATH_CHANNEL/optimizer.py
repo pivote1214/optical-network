@@ -1,7 +1,7 @@
 import time
 from typing import Optional
 
-from optimize.models.RSA_PATH_CHANNEL.params import Parameter
+from src.optimize.models.RSA_PATH_CHANNEL.params import Parameter
 from src.optimize.algorithms.greedy import greedy_RMLSA_offline
 from src.optimize.models.RSA_PATH_CHANNEL.make_input import make_input_lower, make_channels, calculate_gamma
 from src.optimize.models.RSA_PATH_CHANNEL.upper_bound import PathUpperBoundModel, PathUpperBoundInput, PathUpperBoundOutput
