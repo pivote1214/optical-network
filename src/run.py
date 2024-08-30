@@ -28,7 +28,7 @@ if __name__ == "__main__":
     demands_population      = [50, 100, 150, 200]
     demands_seeds_values    = [seed * 2 for seed in range(1, 11)]
     # set parameters (Path-parameter)
-    network_names           = ['NSF', 'JPN12', 'EURO16']
+    network_names           = ['JPN12', 'NSF', 'JPN12', 'EURO16']
     path_algo_list          = ['k-shortest-paths', 
                                'k-dissimilar-paths', 
                                'k-shortest-paths-with-similarity-constraint', 
@@ -122,18 +122,18 @@ if __name__ == "__main__":
                                         )
                                     # optimize
                                     optimizer = PathChannelOptimizer(params)
-                                    # main_model_output, lower_bound_output, upper_bound_output = optimizer.run()
-                                    main_model_output, _, _ = optimizer.run()
+                                    main_model_output, lower_bound_output, upper_bound_output = optimizer.run()
+                                    # main_model_output, _, _ = optimizer.run()
                                     # end!
                                     calc_time = time.time() - start_time
-                                    # # write result to result_table
-                                    # result_table.loc[demands_seed, 'lower_bound']   = int(lower_bound_output.lower_bound)
-                                    # result_table.loc[demands_seed, 'Gap(lower)']    = round(lower_bound_output.gap * 100, 2)
-                                    # result_table.loc[demands_seed, 'time(lower)']   = round(lower_bound_output.calculation_time, 3)
-                                    # # write upper bound result to result_table
-                                    # result_table.loc[demands_seed, 'upper_bound']   = int(upper_bound_output.upper_bound)
-                                    # result_table.loc[demands_seed, 'Gap(upper)']    = round(upper_bound_output.gap * 100, 2)
-                                    # result_table.loc[demands_seed, 'time(upper)']   = round(upper_bound_output.calculation_time, 3)
+                                    # write result to result_table
+                                    result_table.loc[demands_seed, 'lower_bound']   = int(lower_bound_output.lower_bound)
+                                    result_table.loc[demands_seed, 'Gap(lower)']    = round(lower_bound_output.gap * 100, 2)
+                                    result_table.loc[demands_seed, 'time(lower)']   = round(lower_bound_output.calculation_time, 3)
+                                    # write upper bound result to result_table
+                                    result_table.loc[demands_seed, 'upper_bound']   = int(upper_bound_output.upper_bound)
+                                    result_table.loc[demands_seed, 'Gap(upper)']    = round(upper_bound_output.gap * 100, 2)
+                                    result_table.loc[demands_seed, 'time(upper)']   = round(upper_bound_output.calculation_time, 3)
                                     # write main model result to result_table
                                     result_table.loc[demands_seed, 'used_slots']    = int(main_model_output.used_slots)
                                     result_table.loc[demands_seed, 'Gap(main)']     = round(main_model_output.gap * 100, 2)
