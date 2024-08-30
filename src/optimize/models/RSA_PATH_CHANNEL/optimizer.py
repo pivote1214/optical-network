@@ -1,30 +1,49 @@
-import time
-from typing import Optional
+import os
+import sys
+sys.path.append(os.path.abspath('../../../../'))
 
-from src.optimize.models.RSA_PATH_CHANNEL.params import Parameter
+import time
+from typing import Any, Optional
+
 from src.optimize.algorithms.greedy import greedy_RMLSA_offline
-from src.optimize.models.RSA_PATH_CHANNEL.make_input import make_input_lower, make_channels, calculate_gamma
-from src.optimize.models.RSA_PATH_CHANNEL.upper_bound import PathUpperBoundModel, PathUpperBoundInput, PathUpperBoundOutput
-from src.optimize.models.RSA_PATH_CHANNEL.lower_bound import PathLowerBoundInput, PathLowerBoundModel, PathLowerBoundOutput
-from src.optimize.models.RSA_PATH_CHANNEL.model import PathChannelModel, PathChannelInput, PathChannelOutput
+from src.optimize.models.RSA_PATH_CHANNEL.lower_bound import (
+    PathLowerBoundInput,
+    PathLowerBoundModel,
+    PathLowerBoundOutput,
+)
+from src.optimize.models.RSA_PATH_CHANNEL.make_input import (
+    calculate_gamma,
+    make_channels,
+    make_input_lower,
+)
+from src.optimize.models.RSA_PATH_CHANNEL.model import (
+    PathChannelInput,
+    PathChannelModel,
+    PathChannelOutput,
+)
+from src.optimize.models.RSA_PATH_CHANNEL.params import Parameter
+from src.optimize.models.RSA_PATH_CHANNEL.upper_bound import (
+    PathUpperBoundInput,
+    PathUpperBoundModel,
+    PathUpperBoundOutput,
+)
 
 
 class PathChannelOptimizer:
     def __init__(self, params: Parameter):
         self.params: Parameter = params
         self.input: PathLowerBoundInput = self._make_input()
-        from pprint import pprint
-        with open("log_my.txt", "a") as f:
-            f.write("Request:\n")
-            pprint(self.input.D, stream=f)
 
-    def run(self) -> tuple[PathChannelOutput, Optional[PathLowerBoundOutput], Optional[PathUpperBoundOutput]]:
+
+    def run(self) -> Any:
         if self.params.bound_algo == "with":
             return self._run_with_bound_algo()
         elif self.params.bound_algo == "only":
             return self._run_only_bound_algo()
         elif self.params.bound_algo == "hybrid":
             return self._run_hybrid()
+        elif self.params.bound_algo == "lower only":
+            return self._solve_lower_bound()
         else:
             return self._run_without_bound_algo()
 

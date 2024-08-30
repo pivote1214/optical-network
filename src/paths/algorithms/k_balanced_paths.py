@@ -4,7 +4,7 @@ from itertools import combinations
 from gurobipy import Model, GRB, quicksum
 
 from utils.network import calc_path_weight, calc_path_similarity
-from utils.files import save_pickle
+from utils.files import save_pickle, set_paths_file_path
 from utils.namespaces import PATHS_DIR
 from src.paths.algorithms.base_algorithm import PathSelectionAlgorithm
 from src.paths.algorithms.k_dissimilar_paths import KDissimilarPaths
@@ -103,13 +103,10 @@ class KBalancedPaths(PathSelectionAlgorithm):
 
     def save_selected_paths_all_pairs(self) -> None:
         all_paths = self.select_k_paths_all_pairs()
-        output_file = os.path.join(
-            PATHS_DIR, 
-            'k-shortest-paths-with-similarity-constraint', 
-            self.graph_name, 
-            f'path_weight_{self.params["path_weight"]}', 
-            f'sim_weight_{self.params["sim_weight"]}', 
-            f'alpha_{self.params["alpha"]}'.replace(".", "d"), 
-            f'n-paths_{self.n_paths}.pkl'
+        output_file = set_paths_file_path(
+            algorithm='k-shortest-paths-with-similarity-constraint', 
+            network_name=self.graph_name, 
+            params=self.params, 
+            n_paths=self.n_paths
             )
         save_pickle(all_paths, output_file)

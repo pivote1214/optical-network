@@ -34,16 +34,6 @@ class PathLowerBoundModel:
         self.problem = None
         self.x = {}
         self.F_use = None
-        # # inputをprint
-        # print(f"E: {self.input.E}")
-        # print(f"S: {self.input.S}")
-        # print(f"D: {self.input.D}")
-        # print(f"P: {self.input.P}")
-        # print(f"num_slots: {self.input.num_slots}")
-        # print(f"delta: {self.input.delta}")
-        # print(f"result_dir: {self.input.result_dir}")
-        # print(f"demand_seed: {self.input.demand_seed}")
-        # print(f"timelimit: {self.input.timelimit}")
 
     def _set_variables(self) -> None:
         # set variables x
@@ -133,8 +123,23 @@ class PathLowerBoundModel:
             F_use=self.F_use
         )
 
+        # self.ouput_info()
+
         return self.output
 
     def _to_values(self) -> None:
         self.x = {key: int(var.X) for key, var in self.x.items()}
         self.F_use = int(self.F_use.X)
+
+    def ouput_info(self) -> None:
+        # inputの情報を表示
+        from pprint import pprint
+
+        print("Graph")
+        pprint(self.input.E)
+        print("Demands")
+        pprint(self.input.D)
+        print("Paths")
+        pprint(self.input.P)
+        print("Number of Slots")
+        pprint(self.input.num_slots)
