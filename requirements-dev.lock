@@ -10,6 +10,9 @@
 #   universal: false
 
 -e file:.
+antlr4-python3-runtime==4.9.3
+    # via hydra-core
+    # via omegaconf
 appnope==0.1.4
     # via ipykernel
 asttokens==2.4.1
@@ -30,6 +33,8 @@ fonttools==4.53.1
     # via matplotlib
 gurobipy==11.0.3
     # via optical-network
+hydra-core==1.3.2
+    # via optical-network
 ipykernel==6.29.5
     # via optical-network
 ipython==8.26.0
@@ -48,6 +53,9 @@ matplotlib==3.9.2
 matplotlib-inline==0.1.7
     # via ipykernel
     # via ipython
+mypy==1.11.2
+mypy-extensions==1.0.0
+    # via mypy
 nest-asyncio==1.6.0
     # via ipykernel
 networkx==3.3
@@ -57,7 +65,11 @@ numpy==2.1.0
     # via matplotlib
     # via optical-network
     # via pandas
+    # via scipy
+omegaconf==2.3.0
+    # via hydra-core
 packaging==24.1
+    # via hydra-core
     # via ipykernel
     # via matplotlib
 pandas==2.2.2
@@ -88,9 +100,15 @@ python-dateutil==2.9.0.post0
     # via pandas
 pytz==2024.1
     # via pandas
+pyyaml==6.0.2
+    # via omegaconf
 pyzmq==26.2.0
     # via ipykernel
     # via jupyter-client
+ruff==0.6.2
+    # via optical-network
+scipy==1.14.1
+    # via optical-network
 six==1.16.0
     # via asttokens
     # via python-dateutil
@@ -108,6 +126,8 @@ traitlets==5.14.3
     # via jupyter-client
     # via jupyter-core
     # via matplotlib-inline
+typing-extensions==4.12.2
+    # via mypy
 tzdata==2024.1
     # via pandas
 wcwidth==0.2.13
