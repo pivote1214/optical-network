@@ -11,9 +11,9 @@ import gurobipy as gp
 
 from utils.network import load_network
 from utils.namespaces import OUT_DIR
-from optimize.models.RSA_PATH_CHANNEL.params import Parameter, TimeLimit, Width
-from src.optimize.models.RSA_PATH_CHANNEL.optimizer import PathChannelOptimizer
 from utils.files import set_paths_file_path, set_result_dir
+from src.optimize.models.RSA_PATH_CHANNEL.params import Parameter, TimeLimit, Width
+from src.optimize.models.RSA_PATH_CHANNEL.optimizer import PathChannelOptimizer
 
 
 if __name__ == "__main__":
@@ -24,11 +24,11 @@ if __name__ == "__main__":
     # set parameters (RSA-parameter)
     model_name              = 'RSA_PATH_CHANNEL'
     num_slots               = 320
-    num_demands             = 5
+    num_demands             = 100
     demands_population      = [50, 100, 150, 200]
     demands_seeds_values    = [seed * 2 for seed in range(1, 11)]
     # set parameters (Path-parameter)
-    network_names           = ['JPN12', 'NSF', 'EURO16']
+    network_names           = ['NSF', 'JPN12', 'EURO16']
     path_algo_list          = ['k-shortest-paths', 
                                'k-dissimilar-paths', 
                                'k-shortest-paths-with-similarity-constraint', 
@@ -38,7 +38,7 @@ if __name__ == "__main__":
     cls_distance_list       = ['single', 'average']
     alpha_list              = [round(i * 0.25, 2) for i in range(1, 4)]
     n_paths_list            = [2, 3]
-    bound_algo              = "hybrid"
+    bound_algo              = 'hybrid'
     timelimit               = TimeLimit(lower=30.0, upper=150.0, main=720.0)
     width                   = Width(OC=37.5, GB=6.25, FS=12.5)
     TRAFFIC_BPSK            = 50
@@ -122,17 +122,18 @@ if __name__ == "__main__":
                                         )
                                     # optimize
                                     optimizer = PathChannelOptimizer(params)
-                                    main_model_output, lower_bound_output, upper_bound_output = optimizer.run()
+                                    # main_model_output, lower_bound_output, upper_bound_output = optimizer.run()
+                                    main_model_output, _, _ = optimizer.run()
                                     # end!
                                     calc_time = time.time() - start_time
-                                    # write result to result_table
-                                    result_table.loc[demands_seed, 'lower_bound']   = int(lower_bound_output.lower_bound)
-                                    result_table.loc[demands_seed, 'Gap(lower)']    = round(lower_bound_output.gap * 100, 2)
-                                    result_table.loc[demands_seed, 'time(lower)']   = round(lower_bound_output.calculation_time, 3)
-                                    # write upper bound result to result_table
-                                    result_table.loc[demands_seed, 'upper_bound']   = int(upper_bound_output.upper_bound)
-                                    result_table.loc[demands_seed, 'Gap(upper)']    = round(upper_bound_output.gap * 100, 2)
-                                    result_table.loc[demands_seed, 'time(upper)']   = round(upper_bound_output.calculation_time, 3)
+                                    # # write result to result_table
+                                    # result_table.loc[demands_seed, 'lower_bound']   = int(lower_bound_output.lower_bound)
+                                    # result_table.loc[demands_seed, 'Gap(lower)']    = round(lower_bound_output.gap * 100, 2)
+                                    # result_table.loc[demands_seed, 'time(lower)']   = round(lower_bound_output.calculation_time, 3)
+                                    # # write upper bound result to result_table
+                                    # result_table.loc[demands_seed, 'upper_bound']   = int(upper_bound_output.upper_bound)
+                                    # result_table.loc[demands_seed, 'Gap(upper)']    = round(upper_bound_output.gap * 100, 2)
+                                    # result_table.loc[demands_seed, 'time(upper)']   = round(upper_bound_output.calculation_time, 3)
                                     # write main model result to result_table
                                     result_table.loc[demands_seed, 'used_slots']    = int(main_model_output.used_slots)
                                     result_table.loc[demands_seed, 'Gap(main)']     = round(main_model_output.gap * 100, 2)

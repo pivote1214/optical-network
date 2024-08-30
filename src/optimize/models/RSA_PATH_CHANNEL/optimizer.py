@@ -13,6 +13,10 @@ class PathChannelOptimizer:
     def __init__(self, params: Parameter):
         self.params: Parameter = params
         self.input: PathLowerBoundInput = self._make_input()
+        from pprint import pprint
+        with open("log_my.txt", "a") as f:
+            f.write("Request:\n")
+            pprint(self.input.D, stream=f)
 
     def run(self) -> tuple[PathChannelOutput, Optional[PathLowerBoundOutput], Optional[PathUpperBoundOutput]]:
         if self.params.bound_algo == "with":

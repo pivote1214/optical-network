@@ -15,7 +15,7 @@ def main():
     # dummy
     dummy = gp.Model('dummy')
     # parameters
-    graph_names = ['GRID3x4']
+    graph_names = ['NSF', 'JPN12', 'EURO16', 'GRID3x4']
     n_paths = [k for k in range(2, 4)]
     path_weights = ['physical-length', 'hop', 'expected-used-slots']
     sim_weights = ['physical-length', 'all-one']

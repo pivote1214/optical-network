@@ -18,7 +18,7 @@ NETWORK_LIST = [
     'US24', 
     'JPN12', 
     'JPN25', 
-    'GRID3x4'
+    'GRID3x4', 
 ]
 
 def load_network(network_name: str) -> nx.DiGraph:
@@ -43,9 +43,6 @@ def load_network(network_name: str) -> nx.DiGraph:
     network = nx.DiGraph(network)
     return network
 
-
-import numpy as np
-import networkx as nx
 
 def create_noisy_grid_graph(H: int, W: int, interval: int) -> nx.Graph:
     """

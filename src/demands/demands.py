@@ -1,3 +1,7 @@
+import os
+import sys
+sys.path.append(os.path.abspath('../../'))
+
 import numpy as np
 import networkx as nx
 
@@ -33,13 +37,13 @@ def gen_all_demands_offline(
 
 if __name__ == "__main__":
     import pickle
-    from utils.network import load_graph
+    from utils.network import load_network
     from utils.namespaces import DATA_DIR
 
-    graph = load_graph("NSF")
+    graph = load_network("NSF")
     n_demands = 100
     populations = [50, 100, 150, 200]
-    for seed in range(1, 11):
-        demands = gen_all_demands_offline(graph, n_demands, populations, seed*12)
-        with open(f"{DATA_DIR}/input/demands/NSFNET/demands_{seed}_num={n_demands}_p={populations}.pickle", "wb") as f:
+    for seed in range(2, 21, 2):
+        demands = gen_all_demands_offline(graph, n_demands, populations, seed)
+        with open(f"../../test/test_seed={seed}.pickle", "wb") as f:
             pickle.dump(demands, f)
