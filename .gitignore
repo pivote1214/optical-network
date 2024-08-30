@@ -39,3 +39,4 @@ wheels/
 *.opb
 *.cbf
 *.log
+*.sol
