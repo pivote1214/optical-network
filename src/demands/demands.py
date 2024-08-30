@@ -2,8 +2,8 @@ import os
 import sys
 sys.path.append(os.path.abspath('../../'))
 
-import numpy as np
 import networkx as nx
+import numpy as np
 
 
 def _gen_one_demand_size(
@@ -37,13 +37,18 @@ def gen_all_demands_offline(
 
 if __name__ == "__main__":
     import pickle
-    from utils.network import load_network
-    from utils.namespaces import DATA_DIR
 
-    graph = load_network("NSF")
-    n_demands = 100
-    populations = [50, 100, 150, 200]
-    for seed in range(2, 21, 2):
-        demands = gen_all_demands_offline(graph, n_demands, populations, seed)
-        with open(f"../../test/test_seed={seed}.pickle", "wb") as f:
-            pickle.dump(demands, f)
+    from utils.namespaces import TEST_DIR
+    from utils.network import load_network
+
+    network_names = ['JPN12', 'NSF', 'EURO16', 'GRID2x2', 'GRID2x3', 'GRID3x3', 'GRID3x4', 'GRID4x4']
+    for network_name in network_names:
+        graph = load_network(network_name)
+        n_demands = 20
+        populations = [50, 100, 150, 200]
+        for seed in range(2, 21, 2):
+            demands = gen_all_demands_offline(graph, n_demands, populations, seed)
+            if not os.path.exists(os.path.join(TEST_DIR, "demands", network_name)):
+                os.makedirs(os.path.join(TEST_DIR, "demands", network_name))
+            with open(os.path.join(TEST_DIR, "demands", network_name, f"seed={seed}.pkl"), "wb") as f:
+                pickle.dump(demands, f)

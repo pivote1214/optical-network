@@ -18,7 +18,11 @@ NETWORK_LIST = [
     'US24', 
     'JPN12', 
     'JPN25', 
+    'GRID2x2', 
+    'GRID2x3', 
+    'GRID3x3', 
     'GRID3x4', 
+    'GRID4x4', 
 ]
 
 def load_network(network_name: str) -> nx.DiGraph:
@@ -54,7 +58,7 @@ def create_noisy_grid_graph(H: int, W: int, interval: int) -> nx.Graph:
         interval (int): ノード間の間隔
 
     Returns:
-        grid (nx.Graph): グリッドグラフ
+        grid (nx.DiGraph): グリッドグラフ
     """
     # グリッドのノードを配置
     np.random.seed(1214)
@@ -90,6 +94,9 @@ def create_noisy_grid_graph(H: int, W: int, interval: int) -> nx.Graph:
         v_pos = pos[v]
         weight = np.sqrt((u_pos[0] - v_pos[0]) ** 2 + (u_pos[1] - v_pos[1]) ** 2)
         grid[u][v]['weight'] = weight
+    
+    # 有向グラフに変換
+    grid = nx.DiGraph(grid)
     
     return grid
 
@@ -209,7 +216,8 @@ if __name__ == "__main__":
     # print('Enter network_topology name: ')
     # network_name = input()
     # network = load_network(network_name)
-    network = create_noisy_grid_graph(3, 4, 50)
+    H, W = 4, 4
+    network = create_noisy_grid_graph(H, W, 50)
     print(f'Nodes: {list(network.nodes)}')
     print(f'Edges: {list(network.edges)}')
     print(f'Number of nodes: {network.number_of_nodes()}')
@@ -221,4 +229,4 @@ if __name__ == "__main__":
     edge_df = pd.DataFrame(edge_list, columns=['source', 'target', 'weight'])
     # weight列を小数点以下2桁で丸める
     edge_df['weight'] = edge_df['weight'].round(2)
-    edge_df.to_csv(os.path.join(NETWORK_DIR, 'GRID3x4.csv'), index=False)
+    edge_df.to_csv(os.path.join(NETWORK_DIR, f'GRID{H}x{W}.csv'), index=False)
