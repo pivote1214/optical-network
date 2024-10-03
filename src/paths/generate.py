@@ -45,25 +45,25 @@ def main():
                 k_shortest_paths = KShortestPaths(graph_name, n_path, {'path_weight': path_weight})
                 k_shortest_paths.save_selected_paths_all_pairs()
 
-    # k-dissimilar-paths
-    print('k-dissimilar-paths')
-    for graph_name in tqdm.tqdm(network_names):
-        for sim_weight in tqdm.tqdm(sim_weights, leave=False):
-            for n_path in tqdm.tqdm(n_paths, leave=False):
-                k_dissimilar_paths = KDissimilarPaths(graph_name, n_path, {'sim_weight': sim_weight})
-                k_dissimilar_paths.save_selected_paths_all_pairs()
+    # # k-dissimilar-paths
+    # print('k-dissimilar-paths')
+    # for graph_name in tqdm.tqdm(network_names):
+    #     for sim_weight in tqdm.tqdm(sim_weights, leave=False):
+    #         for n_path in tqdm.tqdm(n_paths, leave=False):
+    #             k_dissimilar_paths = KDissimilarPaths(graph_name, n_path, {'sim_weight': sim_weight})
+    #             k_dissimilar_paths.save_selected_paths_all_pairs()
 
-    # k-balanced-paths
-    print('k-balanced-paths')
-    for graph_name in tqdm.tqdm(network_names, desc='graph'.ljust(15)):
-        for n_path in tqdm.tqdm(n_paths, desc='n_paths'.ljust(15), leave=False):
-            for path_weight in tqdm.tqdm(path_weights, desc='path_weight'.ljust(15), leave=False):
-                for sim_weight in tqdm.tqdm(sim_weights, desc='sim_weight'.ljust(15), leave=False):
-                    for alpha in tqdm.tqdm(alpha_values, desc='alpha'.ljust(15), leave=False):
-                        k_balanced_paths = KBalancedPaths(
-                            graph_name, n_path, {'path_weight': path_weight, 'sim_weight': sim_weight, 'alpha': alpha}
-                            )
-                        k_balanced_paths.save_selected_paths_all_pairs()
+    # # k-balanced-paths
+    # print('k-balanced-paths')
+    # for graph_name in tqdm.tqdm(network_names, desc='graph'.ljust(15)):
+    #     for n_path in tqdm.tqdm(n_paths, desc='n_paths'.ljust(15), leave=False):
+    #         for path_weight in tqdm.tqdm(path_weights, desc='path_weight'.ljust(15), leave=False):
+    #             for sim_weight in tqdm.tqdm(sim_weights, desc='sim_weight'.ljust(15), leave=False):
+    #                 for alpha in tqdm.tqdm(alpha_values, desc='alpha'.ljust(15), leave=False):
+    #                     k_balanced_paths = KBalancedPaths(
+    #                         graph_name, n_path, {'path_weight': path_weight, 'sim_weight': sim_weight, 'alpha': alpha}
+    #                         )
+    #                     k_balanced_paths.save_selected_paths_all_pairs()
     
     # print('Hierarchical Clustering')
     # for graph_name in tqdm.tqdm(network_names, desc='graph'.ljust(15)):

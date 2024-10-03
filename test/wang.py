@@ -56,7 +56,8 @@ def select_modulation_format(path_length):
         return 2  # DP-QPSK
     elif path_length <= 6300:
         return 1  # DP-BPSK
-    return 0  # 到達不可距離
+    else:
+        raise ValueError(f"Invalid path length: {path_length}")
 
 def required_fs(traffic_size, modulation):
     """必要な周波数スロット数を計算"""
@@ -86,9 +87,13 @@ def calculate_ksp_and_modulation(graph, n_paths):
             if s != d:
                 KSP_sd = []
                 all_physical_path_sd = list(nx.shortest_simple_paths(graph, s, d))
+                all_physical_path_sd = [
+                    path for path in all_physical_path_sd 
+                    if calculate_path_length(path, graph) <= 6300
+                    ]
                 sorted_all_physical_path_sd = sorted(
                     all_physical_path_sd , 
-                    key = lambda physical_p : (len(physical_p), calculate_path_length(physical_p, graph))
+                    key = lambda physical_p: (len(physical_p), calculate_path_length(physical_p, graph), physical_p)
                     )
                 for physical_path in sorted_all_physical_path_sd[:n_paths]:
                     '''Adaptive modulation format for a lightpath p'''
@@ -176,21 +181,17 @@ def main(network_name: str, n_paths: int, n_demands: int):
         # print(f"Seed: {seed}")
         R = read_requests(seed, network_name, graph, n_demands)
         AP, M, P, F_rp, O_rp = initialize_simulation(R, physical_ksp_sd_set, physical_m)
-        # print("Demands")
-        # pprint(R)
-        # print("Paths")
-        # pprint(AP)
-        # print("Number of Slots")
-        # pprint(M)
         # ILP_SLC_Relaxモデルの実行
         best_PEG, lbound, solution, undone = run_ilp_slc_relaxation(
             logger, TIME_LIMITS['SLC_RMS'], R, P, AP, F_rp, E, SG
         )
         lower_bound_obj_vals.append(int(lbound) + 1)
     
-    # 結果の出力
-    print("Lower Bound Objective Values")
-    pprint(lower_bound_obj_vals)
+        # print('Path')
+        # # pprint(P)
+        # pprint(AP)
+
+    return lower_bound_obj_vals
 
 if __name__ == "__main__":
     main("JPN12")

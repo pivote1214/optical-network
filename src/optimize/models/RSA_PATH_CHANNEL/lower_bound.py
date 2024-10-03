@@ -135,11 +135,11 @@ class PathLowerBoundModel:
         # inputの情報を表示
         from pprint import pprint
 
-        print("Graph")
-        pprint(self.input.E)
-        print("Demands")
-        pprint(self.input.D)
+        # print("Graph")
+        # pprint(self.input.E)
+        # print("Demands")
+        # pprint(self.input.D)
         print("Paths")
         pprint(self.input.P)
-        print("Number of Slots")
-        pprint(self.input.num_slots)
+        # print("Number of Slots")
+        # pprint(self.input.num_slots)

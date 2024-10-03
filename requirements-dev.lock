@@ -52,6 +52,7 @@ kiwisolver==1.4.5
     # via matplotlib
 matplotlib==3.9.2
     # via optical-network
+    # via seaborn
 matplotlib-inline==0.1.7
     # via ipykernel
     # via ipython
@@ -68,6 +69,7 @@ numpy==2.1.0
     # via optical-network
     # via pandas
     # via scipy
+    # via seaborn
 omegaconf==2.3.0
     # via hydra-core
 openpyxl==3.1.5
@@ -78,6 +80,7 @@ packaging==24.1
     # via matplotlib
 pandas==2.2.2
     # via optical-network
+    # via seaborn
 parso==0.8.4
     # via jedi
 pexpect==4.9.0
@@ -112,6 +115,8 @@ pyzmq==26.2.0
 ruff==0.6.2
     # via optical-network
 scipy==1.14.1
+    # via optical-network
+seaborn==0.13.2
     # via optical-network
 six==1.16.0
     # via asttokens

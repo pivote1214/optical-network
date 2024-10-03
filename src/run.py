@@ -20,22 +20,33 @@ if __name__ == "__main__":
     # dummy
     dummy = gp.Model('dummy')
     # experiment number
-    experiment_name = "test"
+    experiment_name = "master-thesis"
     # set parameters (RSA-parameter)
     model_name              = 'RSA_PATH_CHANNEL'
     num_slots               = 320
-    num_demands             = 100
+    num_demands             = 120
     demands_population      = [50, 100, 150, 200]
     demands_seeds_values    = [seed * 2 for seed in range(1, 11)]
     # set parameters (Path-parameter)
-    network_names           = ['JPN12', 'NSF', 'JPN12', 'EURO16']
-    path_algo_list          = ['k-shortest-paths', 
-                               'k-dissimilar-paths', 
-                               'k-shortest-paths-with-similarity-constraint', 
-                               'hierarchical-clustering']
-    path_weight_list        = ['hop', 'expected-used-slots']
-    sim_weight_list         = ['physical-length', 'all-one']
-    cls_distance_list       = ['single', 'average']
+    network_names           = ['JPN12', 'NSF', 'GRID3x4', 'EURO16']
+    path_algo_list          = [
+        'k-shortest-paths', 
+        'k-dissimilar-paths', 
+        'k-shortest-paths-with-similarity-constraint', 
+        # 'hierarchical-clustering',　
+        ]
+    path_weight_list        = [
+        'hop', 
+        # 'expected-used-slots', 
+        ]
+    sim_weight_list         = [
+        'physical-length', 
+        # 'all-one', 
+        ]
+    cls_distance_list       = [
+        'single', 
+        # 'average', 
+        ]
     alpha_list              = [round(i * 0.25, 2) for i in range(1, 4)]
     n_paths_list            = [2, 3]
     bound_algo              = 'hybrid'

@@ -27,9 +27,12 @@ class KShortestPaths(PathSelectionAlgorithm):
         if self.params['path_weight'] == 'physical-length':
             all_simple_paths.sort(key=lambda path: (calc_path_weight(self.graph, path), 
                                                     calc_path_weight(self.graph, path, 'hop')))
+            # print(all_simple_paths)
         elif self.params['path_weight'] == 'hop':
             all_simple_paths.sort(key=lambda path: (calc_path_weight(self.graph, path, 'hop'), 
-                                                    calc_path_weight(self.graph, path)))
+                                                    calc_path_weight(self.graph, path), 
+                                                    path))
+            # print(all_simple_paths)
         elif self.params['path_weight'] == 'expected-used-slots':
             all_simple_paths.sort(key=lambda path: (calc_path_weight(self.graph, path, 'expected-used-slots'), 
                                                     calc_path_weight(self.graph, path, 'hop'), 

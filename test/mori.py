@@ -20,12 +20,10 @@ def main(network_name: str, n_paths: int, n_demands: int):
     # set parameters (General)
     num_slots               = 320
     demands_population      = [50, 100, 150, 200]
-    demands_seed            = 2
     # set parameters (Path-parameter)
     network_name            = network_name
     path_algo               = 'k-shortest-paths'
     path_weight             = 'hop'
-    n_paths                 = 2
     bound_algo              = "lower only"
     timelimit               = TimeLimit(lower=30.0, upper=150.0, main=720.0)
     width                   = Width(OC=37.5, GB=6.25, FS=12.5)
@@ -66,9 +64,10 @@ def main(network_name: str, n_paths: int, n_demands: int):
         lower_bound_output: PathLowerBoundOutput = optimizer.run()
         lower_bound_obj_vals.append(lower_bound_output.lower_bound)
 
+    # print("Lower Bound Objective Values")
+    # pprint.pprint(lower_bound_obj_vals)
 
-    print("Lower Bound Objective Values")
-    pprint.pprint(lower_bound_obj_vals)
+    return lower_bound_obj_vals
 
 
 if __name__ == '__main__':
