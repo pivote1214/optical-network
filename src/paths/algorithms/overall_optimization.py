@@ -3,7 +3,6 @@ import sys
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..')))
 
-import pprint
 from dataclasses import dataclass
 from itertools import combinations, islice
 
@@ -13,7 +12,7 @@ from gurobipy import GRB, Model, Var, quicksum
 from scipy.cluster.hierarchy import fcluster, linkage
 
 from src.paths.algorithms.base_algorithm import PathSelectionAlgorithm
-from utils.network import calc_path_similarity, calc_path_weight
+from utils.network import calc_path_similarity, calc_path_weight, load_network
 
 
 @dataclass
@@ -28,7 +27,7 @@ class NodePairClusteringParams:
     alpha:          float
 
 
-class NodePairClustering(PathSelectionAlgorithm): # TODO: Rename
+class NodePairClustering(PathSelectionAlgorithm):
     def __init__(
         self,
         graph_name: str, 
@@ -51,12 +50,11 @@ class NodePairClustering(PathSelectionAlgorithm): # TODO: Rename
         # 各ノードペアに対してクラスタリングの参考とするパスを取得
         node_pair_paths = {}
         for u, v in node_pairs:
-            ref_paths = list(islice(nx.all_simple_paths(self.graph, source=u, target=v), self.params.n_ref_paths))
+            ref_paths = list(islice(nx.shortest_simple_paths(self.graph, source=u, target=v), self.params.n_ref_paths))
             node_pair_paths[(u, v)] = ref_paths
         # ノードペアの数を取得
         n_node_pairs = len(node_pairs)
-
-        # 距離行列 ()
+        # 距離行列
         distance_vector = []
         for i in range(n_node_pairs):
             for j in range(i + 1, n_node_pairs):
@@ -66,7 +64,7 @@ class NodePairClustering(PathSelectionAlgorithm): # TODO: Rename
                 distance = 1 - similarity  # 距離に変換
                 distance_vector.append(distance)
 
-        # 階層型クラスタリングを実行 # TODO: other clustering methods
+        # 階層型クラスタリングを実行
         linked = linkage(distance_vector, method=self.params.linkage_method)
         # デンドログラムを参考にクラスタリング
         cluster_assignments = fcluster(linked, t=self.params.threshold, criterion=self.params.criterion)
@@ -137,12 +135,16 @@ class NodePairClustering(PathSelectionAlgorithm): # TODO: Rename
         
         # 目的関数の定義
         model.setObjective(
-            quicksum(self.params.alpha * ratio_uvp[(u, v, p_tuple)] * x_uvp[(u, v, p_tuple)]
-                    for u, v in node_pairs
-                    for p_tuple in [tuple(p) for p in pair2mother_set[(u, v)]]) +
-            quicksum((1 - self.params.alpha) * z_ce[(c, e)]
-                    for c in clusters
-                    for e in self.graph.edges()),
+            self.params.alpha * quicksum(
+                ratio_uvp[(u, v, p_tuple)] * x_uvp[(u, v, p_tuple)] 
+                for u, v in node_pairs 
+                for p_tuple in [tuple(p) for p in pair2mother_set[(u, v)]]
+                ) +
+            (1 - self.params.alpha) * quicksum(
+                z_ce[(c, e)] 
+                for c in clusters 
+                for e in self.graph.edges()
+                ),
             GRB.MINIMIZE
         )
         
@@ -191,7 +193,8 @@ class NodePairClustering(PathSelectionAlgorithm): # TODO: Rename
         self, 
         paths1: list[list[int]], 
         paths2: list[list[int]], 
-        edge_weight: str) -> float:
+        edge_weight: str
+        ) -> float:
         """ノードペア間のパスの類似度を計算 (0から1)"""
         # パスの類似度の平均
         similarity = np.mean([calc_path_similarity(self.graph, path1, path2, edge_weight) 
@@ -200,6 +203,9 @@ class NodePairClustering(PathSelectionAlgorithm): # TODO: Rename
 
 
 if __name__ == '__main__':
+    network_name = 'JPN12'
+    graph = load_network(network_name)
+    n_paths = 2
     params = NodePairClusteringParams(
         n_ref_paths=1, 
         sim_metric='all-one', 
@@ -208,9 +214,61 @@ if __name__ == '__main__':
         criterion='distance', 
         cutoff=None, 
         length_metric='hop', 
-        alpha=0.5
+        alpha=0
         )
-
-    path_set_generator = NodePairClustering('JPN12', 2, params)
+    path_set_generator = NodePairClustering(network_name, n_paths, params)
     selected_paths = path_set_generator.select_k_paths_all_pairs()
-    pprint.pprint(selected_paths)
+
+    import pickle
+
+    from utils.files import set_paths_file_path
+
+    baseline_file = set_paths_file_path('k-shortest-paths', network_name, {'path_weight': 'hop'}, n_paths)
+    test_file = 'selected_paths.pkl'
+    with open(test_file, 'wb') as f:
+        pickle.dump(selected_paths, f)
+    
+    from src.optimize.models.RSA_PATH_CHANNEL.optimizer import PathChannelOptimizer
+    from src.optimize.models.RSA_PATH_CHANNEL.params import Parameter, TimeLimit, Width
+
+    num_slots = 320
+    num_demands = 40
+    demands_population = [50, 100, 150, 200]
+    demands_seeds = [seed * 2 for seed in range(1, 11)]
+    timelimit = TimeLimit(lower=30.0, upper=150.0, main=720.0)
+    bound_algo = 'hybrid'
+    width = Width(OC=37.5, GB=6.25, FS=12.5)
+
+    baseline_obj = []
+    test_obj = []
+    import tqdm
+    # for paths_file in tqdm.tqdm([baseline_file, test_file]):
+    for paths_file in tqdm.tqdm([test_file]):
+        for demands_seed in tqdm.tqdm(demands_seeds):
+            # set parameters
+            rsa_params = Parameter(
+                network_name=network_name, 
+                graph=graph, 
+                num_slots=num_slots, 
+                num_demands=num_demands, 
+                demands_population=demands_population, 
+                demands_seed=demands_seed, 
+                paths_dir=paths_file, 
+                result_dir='test/', 
+                bound_algo=bound_algo, 
+                timelimit=timelimit, 
+                width=width, 
+                )
+            # optimize
+            optimizer = PathChannelOptimizer(rsa_params)
+            main_model, _, _ = optimizer.run()
+
+            if paths_file == baseline_file:
+                baseline_obj.append(main_model.objective)
+            else:
+                test_obj.append(main_model.objective)
+
+    print(baseline_obj)
+    print(np.mean(baseline_obj))
+    print(test_obj)
+    print(np.mean(test_obj))

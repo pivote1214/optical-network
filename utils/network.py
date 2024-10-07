@@ -35,7 +35,10 @@ def load_network(network_name: str) -> nx.DiGraph:
     Returns:
         network (nx.DiGraph): ネットワークのグラフ
     """
-    if network_name not in NETWORK_LIST:
+    if network_name == 'test':
+        network = difine_test_graph()
+        return network
+    elif network_name not in NETWORK_LIST:
         raise ValueError(f'network_name must be in {NETWORK_LIST}')
     # ファイルパスの設定
     full_path = os.path.join(NETWORK_DIR, f'{network_name}.csv')
@@ -230,3 +233,44 @@ if __name__ == "__main__":
     # weight列を小数点以下2桁で丸める
     edge_df['weight'] = edge_df['weight'].round(2)
     edge_df.to_csv(os.path.join(NETWORK_DIR, f'GRID{H}x{W}.csv'), index=False)
+
+
+def difine_test_graph(draw: bool=False) -> nx.DiGraph:
+    # ノードの座標の定義
+    node_positions = {
+        1: (0, 1),
+        2: (1, 1),
+        3: (2, 1),
+        4: (0, 0),
+        5: (1, 0)
+    }
+
+    # エッジの定義
+    edges = [
+        (1, 2), (1, 4), (1, 5),
+        (2, 3), (2, 5), (3, 5),
+        (4, 5)
+    ]
+
+    # グラフの構築
+    graph = nx.Graph()
+    graph.add_nodes_from(node_positions.keys())
+    graph.add_edges_from(edges)
+
+    # エッジの重み（ユークリッド距離）の計算
+    for (u, v) in graph.edges():
+        x1, y1 = node_positions[u]
+        x2, y2 = node_positions[v]
+        distance = np.hypot(x2 - x1, y2 - y1)
+        graph.edges[u, v]['weight'] = distance
+    # グラフの描画
+    if draw:
+        edge_labels = nx.get_edge_attributes(graph, 'weight')
+        for key, value in edge_labels.items():
+            edge_labels[key] = round(value, 2)
+        nx.draw_networkx(graph, node_positions, with_labels=True, node_size=500)
+        nx.draw_networkx_edge_labels(graph, node_positions, edge_labels=edge_labels)
+    # 双方向グラフ化
+    graph = graph.to_directed()
+
+    return graph
