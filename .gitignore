@@ -40,3 +40,6 @@ wheels/
 *.cbf
 *.log
 *.sol
+
+# notebook
+notebook/
