@@ -1,7 +1,9 @@
-import networkx as nx
 from itertools import combinations
+from typing import Any
 
-from utils.network import load_network, calc_path_weight, calc_path_similarity
+import networkx as nx
+
+from utils.network import calc_path_similarity, calc_path_weight, load_network
 
 
 class PathSelectionAlgorithm:
@@ -9,9 +11,9 @@ class PathSelectionAlgorithm:
         self, 
         graph_name: str, 
         n_paths: int, 
-        params: dict, 
+        params: Any, 
         length_limit: int = 6300, 
-        ):
+        ): # TODO: params -> None
         self.graph_name = graph_name
         self.graph = load_network(graph_name)
         self.n_paths = n_paths
