@@ -30,10 +30,11 @@ class HierarchicalClustering(PathSelectionAlgorithm):
         self, 
         graph_name: str, 
         n_paths: int, 
-        params: dict = {'path_weight': 'physical-length', 'sim_weight': 'physical-length', 'cls_distance': 'single'}, 
+        params: HierarchicalClusteringParams, 
         length_limit: int = 6300
         ):
-        super().__init__(graph_name, n_paths, params, length_limit)
+        super().__init__(graph_name, n_paths, length_limit)
+        self.params = params
 
     def select_k_paths_single_pair(
         self, 
@@ -45,10 +46,10 @@ class HierarchicalClustering(PathSelectionAlgorithm):
         # 全パス間の距離行列を計算
         distance_matrix = self._calc_distance_matrix(all_simple_paths)
         # パスの重みを計算
-        w_paths = np.array([calc_path_weight(self.graph, path, self.params['path_weight']) for path in all_simple_paths])
+        w_paths = np.array([calc_path_weight(self.graph, path, self.params.length_metric) for path in all_simple_paths])
         # 階層型クラスタリングを実行
         Z = hierarchical_clustering(
-            distance_matrix, self.params['cls_distance']
+            distance_matrix, self.params.linkage_method
         )
         selected_paths_idxs = select_paths_idx(Z, w_paths, self.n_paths)
         if len(selected_paths_idxs) != self.n_paths:
@@ -69,7 +70,7 @@ class HierarchicalClustering(PathSelectionAlgorithm):
             for path_jdx in range(path_idx + 1, N_PATH):
                 distance_matrix[path_idx][path_jdx] = distance_matrix[path_jdx][path_idx] = \
                     1 - calc_path_similarity(self.graph, all_simple_paths[path_idx], 
-                                             all_simple_paths[path_jdx], edge_weight=self.params['sim_weight'])
+                                             all_simple_paths[path_jdx], edge_weight=self.params.sim_metric)
 
         return distance_matrix
 

@@ -8,7 +8,6 @@ sys.path.append(
     )
 
 from itertools import combinations
-from typing import Any
 
 import networkx as nx
 
@@ -27,6 +26,7 @@ class PathSelectionAlgorithm:
         self.graph = load_network(graph_name)
         self.n_paths = n_paths
         self.length_limit = length_limit
+        self.params = None
 
     def select_k_paths_single_pair(
         self, 
@@ -64,7 +64,7 @@ class PathSelectionAlgorithm:
         total_similarity = 0
         path_pairs = list(combinations(range(len(k_paths)), 2))
         for i, j in path_pairs:
-            total_similarity += calc_path_similarity(self.graph, k_paths[i], k_paths[j], edge_weight=self.params['sim_weight'])
+            total_similarity += calc_path_similarity(self.graph, k_paths[i], k_paths[j], edge_weight=self.params.sim_metric)
 
         return total_similarity
 
@@ -79,7 +79,7 @@ class PathSelectionAlgorithm:
             )
         # if folder exists, continue
         if os.path.exists(os.path.dirname(file_paths)):
-            pass
+            return
         else:
             os.makedirs(os.path.dirname(file_paths))
         # select paths

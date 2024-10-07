@@ -39,7 +39,7 @@ class NodePairClustering(PathSelectionAlgorithm):
         params: NodePairClusteringParams, 
         length_limit: int = 6300
         ):
-        super().__init__(graph_name, n_paths, params, length_limit)
+        super().__init__(graph_name, n_paths, length_limit)
         self.params = params
 
     def select_k_paths_all_pairs(self) -> dict[tuple[int, int], list[tuple[int]]]:
@@ -121,6 +121,8 @@ class NodePairClustering(PathSelectionAlgorithm):
 
         # ILP定式化
         model = Model("node-pair-clustering-method")
+        # 出力抑制
+        model.Params.OutputFlag = 0
         # 変数の定義
         # x_{uvp} の定義
         x_uvp = {}

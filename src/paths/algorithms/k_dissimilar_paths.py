@@ -25,10 +25,11 @@ class KDissimilarPaths(PathSelectionAlgorithm):
         self, 
         graph_name: str, 
         n_paths: int, 
-        params: dict = {'sim_weight': 'physical-length'}, 
+        params: KDissimilarPathsParams, 
         length_limit: int = 6300
         ):
-        super().__init__(graph_name, n_paths, params, length_limit)
+        super().__init__(graph_name, n_paths, length_limit)
+        self.params = params
 
     def select_k_paths_single_pair(
         self, 
@@ -71,7 +72,7 @@ class KDissimilarPaths(PathSelectionAlgorithm):
                         self.graph, 
                         all_simple_paths[i], 
                         all_simple_paths[j], 
-                        edge_weight=self.params['sim_weight']
+                        edge_weight=self.params.sim_metric
                         ) * y[i, j] 
                     for i, j in path_pairs if i < j
                     ),

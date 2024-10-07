@@ -33,7 +33,8 @@ class KSPwithSimilarityConstraint(PathSelectionAlgorithm):
         params: KSPwithSimilarityConstraintParams, 
         length_limit: int = 6300
         ):
-        super().__init__(graph_name, n_paths, params, length_limit)
+        super().__init__(graph_name, n_paths, length_limit)
+        self.params = params
         self.all_theta_min, self.all_theta_max = self._calc_theta()
     
     def select_k_paths_single_pair(
@@ -43,7 +44,7 @@ class KSPwithSimilarityConstraint(PathSelectionAlgorithm):
         ) -> list[tuple[int]]:
         """method to find path pair with k balanced paths algorithm"""
         # initialize
-        alpha = self.params['alpha']
+        alpha = self.params.alpha
         theta_min = self.all_theta_min[(source, target)]
         theta_max = self.all_theta_max[(source, target)]
         # create model
@@ -59,7 +60,7 @@ class KSPwithSimilarityConstraint(PathSelectionAlgorithm):
         # objective function
         model.setObjective(
             quicksum(
-                calc_path_weight(self.graph, all_simple_paths[i], metrics=self.params['path_weight']) * x[i] 
+                calc_path_weight(self.graph, all_simple_paths[i], metrics=self.params.length_metric) * x[i] 
                 for i in range(len(all_simple_paths))
                 ), 
             GRB.MINIMIZE
@@ -80,7 +81,7 @@ class KSPwithSimilarityConstraint(PathSelectionAlgorithm):
 
         model.addConstr(
             quicksum(
-                calc_path_similarity(self.graph, all_simple_paths[i], all_simple_paths[j], edge_weight=self.params['sim_weight']) * y[i, j] 
+                calc_path_similarity(self.graph, all_simple_paths[i], all_simple_paths[j], edge_weight=self.params.sim_metric) * y[i, j] 
                 for i, j in path_pairs if i < j
                 ) <= alpha * theta_min + (1 - alpha) * theta_max, 
             "theta_definition"
