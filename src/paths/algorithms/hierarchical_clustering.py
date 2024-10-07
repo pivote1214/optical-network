@@ -1,16 +1,28 @@
 import os
 import sys
-sys.path.append('../..')
+
+sys.path.append(
+    os.path.abspath(
+        os.path.join(os.path.dirname(__file__), os.pardir, os.pardir, os.pardir)
+        )
+    )
 
 import copy
+from dataclasses import dataclass
 
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
 from scipy.cluster.hierarchy import dendrogram, fcluster
 
 from src.paths.algorithms.base_algorithm import PathSelectionAlgorithm
-from utils.files import set_paths_file_path, save_pickle
-from utils.network import calc_path_weight, calc_path_similarity
+from utils.network import calc_path_similarity, calc_path_weight
+
+
+@dataclass
+class HierarchicalClusteringParams:
+    length_metric:  str
+    sim_metric:     str
+    linkage_method: str
 
 
 class HierarchicalClustering(PathSelectionAlgorithm):
@@ -60,13 +72,6 @@ class HierarchicalClustering(PathSelectionAlgorithm):
                                              all_simple_paths[path_jdx], edge_weight=self.params['sim_weight'])
 
         return distance_matrix
-
-    def save_selected_paths_all_pairs(self) -> None:
-        all_paths = self.select_k_paths_all_pairs()
-        file_path = set_paths_file_path(
-            'hierarchical-clustering', self.graph_name, self.params, self.n_paths
-            )
-        save_pickle(all_paths, file_path)
 
 
 def calc_cluster_distnce(

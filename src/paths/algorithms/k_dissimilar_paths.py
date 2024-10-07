@@ -1,13 +1,24 @@
 import os
+import sys
+
+sys.path.append(
+    os.path.abspath(
+        os.path.join(os.path.dirname(__file__), os.pardir, os.pardir, os.pardir)
+        )
+    )
+
+from dataclasses import dataclass
 from itertools import combinations
 
 from gurobipy import GRB, Model, quicksum
 
 from src.paths.algorithms.base_algorithm import PathSelectionAlgorithm
-from utils.files import save_pickle, set_paths_file_path
-from utils.namespaces import PATHS_DIR
 from utils.network import calc_path_similarity, calc_path_weight
 
+
+@dataclass
+class KDissimilarPathsParams:
+    sim_metric:     str
 
 class KDissimilarPaths(PathSelectionAlgorithm):
     def __init__(
@@ -73,13 +84,3 @@ class KDissimilarPaths(PathSelectionAlgorithm):
         k_paths = [all_simple_paths[i] for i in range(len(all_simple_paths)) if x[i].X > 0.5]
 
         return k_paths
-
-    def save_selected_paths_all_pairs(self) -> None:
-        all_paths = self.select_k_paths_all_pairs()
-        output_file = set_paths_file_path(
-            algorithm='k-dissimilar-paths', 
-            network_name=self.graph_name, 
-            params=self.params, 
-            n_paths=self.n_paths
-            )
-        save_pickle(all_paths, output_file)

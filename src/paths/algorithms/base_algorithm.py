@@ -1,11 +1,18 @@
 import os
+import sys
+
+sys.path.append(
+    os.path.abspath(
+        os.path.join(os.path.dirname(__file__), os.pardir, os.pardir, os.pardir)
+        )
+    )
+
 from itertools import combinations
-import pickle
 from typing import Any
 
 import networkx as nx
 
-from utils.files import set_paths_file_path
+from utils.files import save_pickle, set_paths_file_path
 from utils.network import calc_path_similarity, calc_path_weight, load_network
 
 
@@ -42,10 +49,6 @@ class PathSelectionAlgorithm:
             all_paths[(target, source)] = one_pair_paths_reverse
         
         return all_paths
-
-    def save_selected_paths_all_pairs(self) -> None:
-        """method to save selected paths for all pairs"""
-        raise NotImplementedError("This method should be implemented by subclasses")
 
     def _calc_all_simple_paths(
         self, 
@@ -84,5 +87,4 @@ class PathSelectionAlgorithm:
         # select paths
         candidate_paths_set = self.select_k_paths_all_pairs()
         # save paths
-        with open(file_paths, 'wb') as f:
-            pickle.dump(candidate_paths_set, f)
+        save_pickle(candidate_paths_set, file_paths)

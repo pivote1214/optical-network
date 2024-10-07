@@ -1,9 +1,21 @@
 import os
+import sys
+
+sys.path.append(
+    os.path.abspath(
+        os.path.join(os.path.dirname(__file__), os.pardir, os.pardir, os.pardir)
+        )
+    )
+
+from dataclasses import dataclass
 
 from src.paths.algorithms.base_algorithm import PathSelectionAlgorithm
 from utils.network import calc_path_weight
-from utils.namespaces import PATHS_DIR
-from utils.files import save_pickle, set_paths_file_path
+
+
+@dataclass
+class KShortestPathsParams:
+    path_metric:    str
 
 
 class KShortestPaths(PathSelectionAlgorithm):
@@ -43,13 +55,3 @@ class KShortestPaths(PathSelectionAlgorithm):
         k_paths = all_simple_paths[:self.n_paths]
 
         return k_paths
-
-    def save_selected_paths_all_pairs(self) -> None:
-        all_paths = self.select_k_paths_all_pairs()
-        output_file = set_paths_file_path(
-            algorithm='k-shortest-paths', 
-            network_name=self.graph_name, 
-            params=self.params, 
-            n_paths=self.n_paths
-            )
-        save_pickle(all_paths, output_file)
