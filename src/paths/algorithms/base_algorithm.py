@@ -21,13 +21,11 @@ class PathSelectionAlgorithm:
         self, 
         graph_name: str, 
         n_paths: int, 
-        params: Any, 
         length_limit: int = 6300, 
         ) -> None:
         self.graph_name = graph_name
         self.graph = load_network(graph_name)
         self.n_paths = n_paths
-        self.params = params
         self.length_limit = length_limit
 
     def select_k_paths_single_pair(
