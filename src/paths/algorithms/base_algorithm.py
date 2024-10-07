@@ -1,8 +1,11 @@
+import os
 from itertools import combinations
+import pickle
 from typing import Any
 
 import networkx as nx
 
+from utils.files import set_paths_file_path
 from utils.network import calc_path_similarity, calc_path_weight, load_network
 
 
@@ -13,7 +16,7 @@ class PathSelectionAlgorithm:
         n_paths: int, 
         params: Any, 
         length_limit: int = 6300, 
-        ): # TODO: params -> None
+        ) -> None:
         self.graph_name = graph_name
         self.graph = load_network(graph_name)
         self.n_paths = n_paths
@@ -63,3 +66,23 @@ class PathSelectionAlgorithm:
             total_similarity += calc_path_similarity(self.graph, k_paths[i], k_paths[j], edge_weight=self.params['sim_weight'])
 
         return total_similarity
+
+    def save_selected_paths(self) -> None:
+        """method to save selected paths"""
+        # set file path
+        file_paths = set_paths_file_path(
+            algorithm=self.__class__.__name__, 
+            network_name=self.graph_name, 
+            params=self.params, 
+            n_paths=self.n_paths
+            )
+        # if folder exists, continue
+        if os.path.exists(os.path.dirname(file_paths)):
+            pass
+        else:
+            os.makedirs(os.path.dirname(file_paths))
+        # select paths
+        candidate_paths_set = self.select_k_paths_all_pairs()
+        # save paths
+        with open(file_paths, 'wb') as f:
+            pickle.dump(candidate_paths_set, f)

@@ -17,14 +17,14 @@ from utils.network import calc_path_similarity, calc_path_weight, load_network
 
 @dataclass
 class NodePairClusteringParams:
-    n_ref_paths:    int
     sim_metric:     str
-    linkage_method: str
-    threshold:      float
-    criterion:      str
-    cutoff:         int
     length_metric:  str
-    alpha:          float
+    n_ref_paths:    int
+    cutoff:         int
+    linkage_method: str
+    criterion:      str
+    threshold:      float
+    w_obj:          float
 
 
 class NodePairClustering(PathSelectionAlgorithm):

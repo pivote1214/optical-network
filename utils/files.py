@@ -3,6 +3,7 @@ import sys
 sys.path.append(os.path.abspath('../'))
 
 import pickle
+from datetime import datetime
 from typing import Any
 
 from utils.namespaces import PATHS_DIR, OUT_DIR
@@ -29,7 +30,7 @@ def save_pickle(object: Any, file_path: str) -> None:
 def set_paths_file_path(
     algorithm: str, 
     network_name: str, 
-    params: dict[str, Any], 
+    params: Any, 
     n_paths: int
     ) -> str:
     """
@@ -41,32 +42,17 @@ def set_paths_file_path(
         params (dict[str, any]): アルゴリズムのパラメータ
         n_paths (int): パス数
     """
-    if algorithm == 'k-shortest-paths':
-        file_path = os.path.join(
-            PATHS_DIR, algorithm, network_name, 
-            f'path-weight_{params["path_weight"]}', f'n-paths_{n_paths}.pkl'
-            )
-    elif algorithm == 'k-dissimilar-paths':
-        file_path = os.path.join(
-            PATHS_DIR, algorithm, network_name, 
-            f'sim-weight_{params["sim_weight"]}', f'n-paths_{n_paths}.pkl'
-            )
-    elif algorithm == 'k-shortest-paths-with-similarity-constraint':
-        file_path = os.path.join(
-            PATHS_DIR, algorithm, network_name, 
-            f'path-weight_{params["path_weight"]}', f'sim-weight_{params["sim_weight"]}', 
-            f'alpha_{params["alpha"]}'.replace('.', 'd'), f'n-paths_{n_paths}.pkl'
-            )
-    elif algorithm == 'hierarchical-clustering':
-        file_path = os.path.join(
-            PATHS_DIR, algorithm, network_name, 
-            f'path-weight_{params["path_weight"]}', f'sim-weight_{params["sim_weight"]}', 
-            f'cls-distance_{params["cls_distance"]}', f'n-paths_{n_paths}.pkl'
-            )
-    else:
-        raise ValueError('algorithmの値が不正です')
-        
-    return file_path
+    # get timestamp
+    timestamp = datetime.now().strftime('%Y-%m-%d-%H-%M-%S%f')
+    # get params with '.' replaced by '_'
+    params_name = [f"{key}={str(getattr(params, key)).replace('.', 'd')}" 
+                   for key in params.__annotations__]
+    paths_file_path = os.path.join(
+        PATHS_DIR, algorithm, network_name, 
+        *params_name, f"n-paths={n_paths}_{timestamp}.pkl"
+        )
+
+    return paths_file_path
 
 
 def set_result_dir(
