@@ -1,25 +1,40 @@
 import os
+import sys
+
+sys.path.append(
+    os.path.abspath(
+        os.path.join(os.path.dirname(__file__), os.pardir, os.pardir, os.pardir)
+        )
+    )
+
+from dataclasses import dataclass
 from itertools import combinations
 
-from gurobipy import Model, GRB, quicksum
+from gurobipy import GRB, Model, quicksum
 
-from utils.network import calc_path_weight, calc_path_similarity
-from utils.files import save_pickle, set_paths_file_path
-from utils.namespaces import PATHS_DIR
 from src.paths.algorithms.base_algorithm import PathSelectionAlgorithm
 from src.paths.algorithms.k_dissimilar_paths import KDissimilarPaths
 from src.paths.algorithms.k_shortest_paths import KShortestPaths
+from utils.network import calc_path_similarity, calc_path_weight
 
 
-class KBalancedPaths(PathSelectionAlgorithm):
+@dataclass
+class KSPwithSimilarityConstraintParams:
+    length_metric:    str
+    sim_metric:       str
+    alpha:            float
+    
+
+class KSPwithSimilarityConstraint(PathSelectionAlgorithm):
     def __init__(
         self, 
         graph_name: str, 
         n_paths: int, 
-        params: dict = {'path_weight': 'physical-length', 'sim_weight': 'physical-length', 'alpha': 0.3}, 
+        params: KSPwithSimilarityConstraintParams, 
         length_limit: int = 6300
         ):
-        super().__init__(graph_name, n_paths, params, length_limit)
+        super().__init__(graph_name, n_paths, length_limit)
+        self.params = params
         self.all_theta_min, self.all_theta_max = self._calc_theta()
     
     def select_k_paths_single_pair(
@@ -29,7 +44,7 @@ class KBalancedPaths(PathSelectionAlgorithm):
         ) -> list[tuple[int]]:
         """method to find path pair with k balanced paths algorithm"""
         # initialize
-        alpha = self.params['alpha']
+        alpha = self.params.alpha
         theta_min = self.all_theta_min[(source, target)]
         theta_max = self.all_theta_max[(source, target)]
         # create model
@@ -45,7 +60,7 @@ class KBalancedPaths(PathSelectionAlgorithm):
         # objective function
         model.setObjective(
             quicksum(
-                calc_path_weight(self.graph, all_simple_paths[i], metrics=self.params['path_weight']) * x[i] 
+                calc_path_weight(self.graph, all_simple_paths[i], metrics=self.params.length_metric) * x[i] 
                 for i in range(len(all_simple_paths))
                 ), 
             GRB.MINIMIZE
@@ -66,7 +81,7 @@ class KBalancedPaths(PathSelectionAlgorithm):
 
         model.addConstr(
             quicksum(
-                calc_path_similarity(self.graph, all_simple_paths[i], all_simple_paths[j], edge_weight=self.params['sim_weight']) * y[i, j] 
+                calc_path_similarity(self.graph, all_simple_paths[i], all_simple_paths[j], edge_weight=self.params.sim_metric) * y[i, j] 
                 for i, j in path_pairs if i < j
                 ) <= alpha * theta_min + (1 - alpha) * theta_max, 
             "theta_definition"
@@ -100,13 +115,3 @@ class KBalancedPaths(PathSelectionAlgorithm):
             all_theta_max[(target, source)] = theta_max
 
         return all_theta_min, all_theta_max
-
-    def save_selected_paths_all_pairs(self) -> None:
-        all_paths = self.select_k_paths_all_pairs()
-        output_file = set_paths_file_path(
-            algorithm='k-shortest-paths-with-similarity-constraint', 
-            network_name=self.graph_name, 
-            params=self.params, 
-            n_paths=self.n_paths
-            )
-        save_pickle(all_paths, output_file)

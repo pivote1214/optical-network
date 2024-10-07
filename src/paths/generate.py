@@ -1,80 +1,123 @@
+import os
 import sys
-sys.path.append('../..')
+
+sys.path.append(
+    os.path.abspath(
+        os.path.join(os.path.dirname(__file__), os.pardir, os.pardir)
+        )
+    )
 
 import tqdm
 
 import gurobipy as gp
 
-from src.paths.algorithms.k_shortest_paths import KShortestPaths
-from src.paths.algorithms.k_dissimilar_paths import KDissimilarPaths
-from src.paths.algorithms.k_balanced_paths import KBalancedPaths
-from src.paths.algorithms.hierarchical_clustering import HierarchicalClustering
+from src.paths.algorithms.k_shortest_paths import KShortestPaths, KShortestPathsParams
+from src.paths.algorithms.k_dissimilar_paths import KDissimilarPaths, KDissimilarPathsParams
+from src.paths.algorithms.k_balanced_paths import KSPwithSimilarityConstraint, KSPwithSimilarityConstraintParams
+from src.paths.algorithms.hierarchical_clustering import HierarchicalClustering, HierarchicalClusteringParams
+from src.paths.algorithms.overall_optimization import NodePairClustering, NodePairClusteringParams
 
 
 def main():
     # dummy
     dummy = gp.Model('dummy')
     # parameters
-    # network_names = ['GRID2x2', 'GRID2x3', 'GRID3x3', 'JPN12']
-    network_names = [
+    graph_name_list = [
         # 'N6', 
-        # 'N6S9', 
+        'N6S9', 
         # 'RING', 
         'NSF', 
         'EURO16', 
         # 'US24', 
         'JPN12', 
         # 'JPN25', 
-        'GRID2x2', 
-        'GRID2x3', 
+        # 'GRID2x2', 
+        # 'GRID2x3', 
         'GRID3x3', 
         'GRID3x4', 
         # 'GRID4x4', 
     ]
-    n_paths = [k for k in range(2, 4)]
-    path_weights = ['physical-length', 'hop', 'expected-used-slots']
-    sim_weights = ['physical-length', 'all-one']
-    cls_distances = ['single', 'complete', 'average']
-    alpha_values = [round(i * 0.25, 2) for i in range(1, 4)]
+    n_paths_values      = [k for k in range(2, 4)]
+    length_metric_list  = ['physical-length', 'hop', 'expected-used-slots']
+    sim_metric_list     = ['physical-length', 'all-one']
+    alpha_values        = [round(i * 0.25, 2) for i in range(1, 4)]
+    linkage_method_list = ['single', 'average']
+    n_ref_paths         = 1
+    cutoff              = None
+    citerion            = 'distance'
+    threshold_values    = [round(i * 0.25, 2) for i in range(1, 4)]
+    w_obj_values        = [round(i * 0.5, 1) for i in range(3)]
 
-    # k-shortest-paths
-    print('k-shortest-paths')
-    for graph_name in tqdm.tqdm(network_names):
-        for path_weight in tqdm.tqdm(path_weights, leave=False):
-            for n_path in tqdm.tqdm(n_paths, leave=False):
-                k_shortest_paths = KShortestPaths(graph_name, n_path, {'path_weight': path_weight})
-                k_shortest_paths.save_selected_paths_all_pairs()
+    # k-Shortest Paths
+    print("k-Shortest Paths")
+    for graph_name in tqdm.tqdm(graph_name_list):
+        for length_metric in tqdm.tqdm(length_metric_list, leave=False):
+            for n_paths in tqdm.tqdm(n_paths_values, leave=False):
+                params = KShortestPathsParams(length_metric=length_metric)
+                path_generator = KShortestPaths(graph_name, n_paths, params)
+                path_generator.save_selected_paths()
 
-    # # k-dissimilar-paths
-    # print('k-dissimilar-paths')
-    # for graph_name in tqdm.tqdm(network_names):
-    #     for sim_weight in tqdm.tqdm(sim_weights, leave=False):
-    #         for n_path in tqdm.tqdm(n_paths, leave=False):
-    #             k_dissimilar_paths = KDissimilarPaths(graph_name, n_path, {'sim_weight': sim_weight})
-    #             k_dissimilar_paths.save_selected_paths_all_pairs()
+    # k-Dissimilar Paths
+    print('k-Dissimilar Paths')
+    for graph_name in tqdm.tqdm(graph_name_list):
+        for sim_metric in tqdm.tqdm(sim_metric_list, leave=False):
+            for n_paths in tqdm.tqdm(n_paths_values, leave=False):
+                params = KDissimilarPathsParams(sim_metric=sim_metric)
+                path_generator = KDissimilarPaths(graph_name, n_paths, params)
+                path_generator.save_selected_paths()
 
-    # # k-balanced-paths
-    # print('k-balanced-paths')
-    # for graph_name in tqdm.tqdm(network_names, desc='graph'.ljust(15)):
-    #     for n_path in tqdm.tqdm(n_paths, desc='n_paths'.ljust(15), leave=False):
-    #         for path_weight in tqdm.tqdm(path_weights, desc='path_weight'.ljust(15), leave=False):
-    #             for sim_weight in tqdm.tqdm(sim_weights, desc='sim_weight'.ljust(15), leave=False):
-    #                 for alpha in tqdm.tqdm(alpha_values, desc='alpha'.ljust(15), leave=False):
-    #                     k_balanced_paths = KBalancedPaths(
-    #                         graph_name, n_path, {'path_weight': path_weight, 'sim_weight': sim_weight, 'alpha': alpha}
-    #                         )
-    #                     k_balanced_paths.save_selected_paths_all_pairs()
-    
-    # print('Hierarchical Clustering')
-    # for graph_name in tqdm.tqdm(network_names, desc='graph'.ljust(15)):
-    #     for n_path in tqdm.tqdm(n_paths, desc='n_paths'.ljust(15), leave=False):
-    #         for path_weight in tqdm.tqdm(path_weights, desc='path_weight'.ljust(15), leave=False):
-    #             for sim_weight in tqdm.tqdm(sim_weights, desc='sim_weight'.ljust(15), leave=False):
-    #                 for cls_distance in tqdm.tqdm(cls_distances, desc='cls_distance'.ljust(15), leave=False):
-    #                     hierarchical_clustering = HierarchicalClustering(
-    #                         graph_name, n_path, {'path_weight': path_weight, 'sim_weight': sim_weight, 'cls_distance': cls_distance}
-    #                         )
-    #                     hierarchical_clustering.save_selected_paths_all_pairs()
+    # k-Shortest Paths with Similarity Constraint
+    print('k-Shortest Paths with Similarity Constraint')
+    for graph_name in tqdm.tqdm(graph_name_list):
+        for length_metric in tqdm.tqdm(length_metric_list, leave=False):
+            for sim_metric in tqdm.tqdm(sim_metric_list, leave=False):
+                for alpha in tqdm.tqdm(alpha_values, leave=False):
+                    for n_paths in tqdm.tqdm(n_paths_values, leave=False):
+                        params = KSPwithSimilarityConstraintParams(
+                            length_metric=length_metric, 
+                            sim_metric=sim_metric, 
+                            alpha=alpha
+                            )
+                        path_generator = KSPwithSimilarityConstraint(graph_name, n_paths, params)
+                        path_generator.save_selected_paths()
+
+    # Hierarchical Clustering
+    print('Hierarchical Clustering')
+    for graph_name in tqdm.tqdm(graph_name_list, desc='graph'.ljust(15)):
+        for length_metric in tqdm.tqdm(length_metric_list, desc='length_metric'.ljust(15), leave=False):
+            for sim_metric in tqdm.tqdm(sim_metric_list, desc='sim_metric'.ljust(15), leave=False):
+                for linkage_method in tqdm.tqdm(linkage_method_list, desc='linkage_method'.ljust(15), leave=False):
+                    for n_paths in tqdm.tqdm(n_paths_values, desc='n_paths'.ljust(15), leave=False):
+                        params = HierarchicalClusteringParams(
+                            length_metric=length_metric, 
+                            sim_metric=sim_metric, 
+                            linkage_method=linkage_method
+                            )
+                        path_generator = HierarchicalClustering(graph_name, n_paths, params)
+                        path_generator.save_selected_paths()
+
+    # Node Pair Clustering
+    print('Node Pair Clustering')
+    for graph_name in tqdm.tqdm(graph_name_list, desc='graph'.ljust(15)):
+        for length_metric in tqdm.tqdm(length_metric_list, desc='length_metric'.ljust(15), leave=False):
+            for sim_metric in tqdm.tqdm(sim_metric_list, desc='sim_metric'.ljust(15), leave=False):
+                for linkage_method in tqdm.tqdm(linkage_method_list, desc='linkage_method'.ljust(15), leave=False):
+                    for threshold in tqdm.tqdm(threshold_values, desc='threshold'.ljust(15), leave=False):
+                        for w_obj in tqdm.tqdm(w_obj_values, desc='w_obj'.ljust(15), leave=False):
+                            for n_paths in tqdm.tqdm(n_paths_values, desc='n_paths'.ljust(15), leave=False):
+                                params = NodePairClusteringParams(
+                                    length_metric=length_metric, 
+                                    sim_metric=sim_metric, 
+                                    n_ref_paths=n_ref_paths, 
+                                    cutoff=cutoff, 
+                                    linkage_method=linkage_method, 
+                                    criterion=citerion, 
+                                    threshold=threshold, 
+                                    w_obj=w_obj
+                                    )
+                                path_generator = NodePairClustering(graph_name, n_paths, params)
+                                path_generator.save_selected_paths()
+
 
 if __name__ == '__main__':
     main()

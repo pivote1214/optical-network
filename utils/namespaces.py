@@ -1,6 +1,6 @@
 import os
 
-ROOT_DIR = os.path.dirname(os.path.dirname(__file__))
+ROOT_DIR = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
 TEST_DIR = os.path.join(ROOT_DIR, 'test')
 DATA_DIR = os.path.join(ROOT_DIR, 'data')
 PATHS_DIR = os.path.join(DATA_DIR, 'paths')

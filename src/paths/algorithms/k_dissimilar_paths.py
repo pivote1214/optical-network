@@ -1,23 +1,35 @@
 import os
+import sys
+
+sys.path.append(
+    os.path.abspath(
+        os.path.join(os.path.dirname(__file__), os.pardir, os.pardir, os.pardir)
+        )
+    )
+
+from dataclasses import dataclass
 from itertools import combinations
 
 from gurobipy import GRB, Model, quicksum
 
 from src.paths.algorithms.base_algorithm import PathSelectionAlgorithm
-from utils.files import save_pickle, set_paths_file_path
-from utils.namespaces import PATHS_DIR
 from utils.network import calc_path_similarity, calc_path_weight
 
+
+@dataclass
+class KDissimilarPathsParams:
+    sim_metric:     str
 
 class KDissimilarPaths(PathSelectionAlgorithm):
     def __init__(
         self, 
         graph_name: str, 
         n_paths: int, 
-        params: dict = {'sim_weight': 'physical-length'}, 
+        params: KDissimilarPathsParams, 
         length_limit: int = 6300
         ):
-        super().__init__(graph_name, n_paths, params, length_limit)
+        super().__init__(graph_name, n_paths, length_limit)
+        self.params = params
 
     def select_k_paths_single_pair(
         self, 
@@ -60,7 +72,7 @@ class KDissimilarPaths(PathSelectionAlgorithm):
                         self.graph, 
                         all_simple_paths[i], 
                         all_simple_paths[j], 
-                        edge_weight=self.params['sim_weight']
+                        edge_weight=self.params.sim_metric
                         ) * y[i, j] 
                     for i, j in path_pairs if i < j
                     ),
@@ -73,13 +85,3 @@ class KDissimilarPaths(PathSelectionAlgorithm):
         k_paths = [all_simple_paths[i] for i in range(len(all_simple_paths)) if x[i].X > 0.5]
 
         return k_paths
-
-    def save_selected_paths_all_pairs(self) -> None:
-        all_paths = self.select_k_paths_all_pairs()
-        output_file = set_paths_file_path(
-            algorithm='k-dissimilar-paths', 
-            network_name=self.graph_name, 
-            params=self.params, 
-            n_paths=self.n_paths
-            )
-        save_pickle(all_paths, output_file)

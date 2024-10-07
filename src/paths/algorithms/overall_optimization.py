@@ -1,7 +1,11 @@
 import os
 import sys
 
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..')))
+sys.path.append(
+    os.path.abspath(
+        os.path.join(os.path.dirname(__file__), os.pardir, os.pardir, os.pardir)
+        )
+    )
 
 from dataclasses import dataclass
 from itertools import combinations, islice
@@ -17,25 +21,25 @@ from utils.network import calc_path_similarity, calc_path_weight, load_network
 
 @dataclass
 class NodePairClusteringParams:
-    n_ref_paths:    int
-    sim_metric:     str
-    linkage_method: str
-    threshold:      float
-    criterion:      str
-    cutoff:         int
     length_metric:  str
-    alpha:          float
+    sim_metric:     str
+    n_ref_paths:    int
+    cutoff:         int
+    linkage_method: str
+    criterion:      str
+    threshold:      float
+    w_obj:          float
 
 
 class NodePairClustering(PathSelectionAlgorithm):
     def __init__(
         self,
         graph_name: str, 
-        n_paths: int, # TODO: Rename
+        n_paths: int, 
         params: NodePairClusteringParams, 
         length_limit: int = 6300
         ):
-        super().__init__(graph_name, n_paths, params, length_limit)
+        super().__init__(graph_name, n_paths, length_limit)
         self.params = params
 
     def select_k_paths_all_pairs(self) -> dict[tuple[int, int], list[tuple[int]]]:
@@ -117,6 +121,8 @@ class NodePairClustering(PathSelectionAlgorithm):
 
         # ILP定式化
         model = Model("node-pair-clustering-method")
+        # 出力抑制
+        model.Params.OutputFlag = 0
         # 変数の定義
         # x_{uvp} の定義
         x_uvp = {}
@@ -135,12 +141,12 @@ class NodePairClustering(PathSelectionAlgorithm):
         
         # 目的関数の定義
         model.setObjective(
-            self.params.alpha * quicksum(
+            self.params.w_obj * quicksum(
                 ratio_uvp[(u, v, p_tuple)] * x_uvp[(u, v, p_tuple)] 
                 for u, v in node_pairs 
                 for p_tuple in [tuple(p) for p in pair2mother_set[(u, v)]]
                 ) +
-            (1 - self.params.alpha) * quicksum(
+            (1 - self.params.w_obj) * quicksum(
                 z_ce[(c, e)] 
                 for c in clusters 
                 for e in self.graph.edges()
@@ -200,75 +206,3 @@ class NodePairClustering(PathSelectionAlgorithm):
         similarity = np.mean([calc_path_similarity(self.graph, path1, path2, edge_weight) 
                               for path1 in paths1 for path2 in paths2])
         return similarity
-
-
-if __name__ == '__main__':
-    network_name = 'JPN12'
-    graph = load_network(network_name)
-    n_paths = 2
-    params = NodePairClusteringParams(
-        n_ref_paths=1, 
-        sim_metric='all-one', 
-        linkage_method='average', 
-        threshold=0.8, 
-        criterion='distance', 
-        cutoff=None, 
-        length_metric='hop', 
-        alpha=0
-        )
-    path_set_generator = NodePairClustering(network_name, n_paths, params)
-    selected_paths = path_set_generator.select_k_paths_all_pairs()
-
-    import pickle
-
-    from utils.files import set_paths_file_path
-
-    baseline_file = set_paths_file_path('k-shortest-paths', network_name, {'path_weight': 'hop'}, n_paths)
-    test_file = 'selected_paths.pkl'
-    with open(test_file, 'wb') as f:
-        pickle.dump(selected_paths, f)
-    
-    from src.optimize.models.RSA_PATH_CHANNEL.optimizer import PathChannelOptimizer
-    from src.optimize.models.RSA_PATH_CHANNEL.params import Parameter, TimeLimit, Width
-
-    num_slots = 320
-    num_demands = 40
-    demands_population = [50, 100, 150, 200]
-    demands_seeds = [seed * 2 for seed in range(1, 11)]
-    timelimit = TimeLimit(lower=30.0, upper=150.0, main=720.0)
-    bound_algo = 'hybrid'
-    width = Width(OC=37.5, GB=6.25, FS=12.5)
-
-    baseline_obj = []
-    test_obj = []
-    import tqdm
-    # for paths_file in tqdm.tqdm([baseline_file, test_file]):
-    for paths_file in tqdm.tqdm([test_file]):
-        for demands_seed in tqdm.tqdm(demands_seeds):
-            # set parameters
-            rsa_params = Parameter(
-                network_name=network_name, 
-                graph=graph, 
-                num_slots=num_slots, 
-                num_demands=num_demands, 
-                demands_population=demands_population, 
-                demands_seed=demands_seed, 
-                paths_dir=paths_file, 
-                result_dir='test/', 
-                bound_algo=bound_algo, 
-                timelimit=timelimit, 
-                width=width, 
-                )
-            # optimize
-            optimizer = PathChannelOptimizer(rsa_params)
-            main_model, _, _ = optimizer.run()
-
-            if paths_file == baseline_file:
-                baseline_obj.append(main_model.objective)
-            else:
-                test_obj.append(main_model.objective)
-
-    print(baseline_obj)
-    print(np.mean(baseline_obj))
-    print(test_obj)
-    print(np.mean(test_obj))
