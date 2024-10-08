@@ -35,7 +35,6 @@ class KSPwithSimilarityConstraint(PathSelectionAlgorithm):
         ):
         super().__init__(graph_name, n_paths, length_limit)
         self.params = params
-        self.all_theta_min, self.all_theta_max = self._calc_theta()
     
     def select_k_paths_single_pair(
         self, 
@@ -93,6 +92,10 @@ class KSPwithSimilarityConstraint(PathSelectionAlgorithm):
         k_paths = [all_simple_paths[i] for i in range(len(all_simple_paths)) if x[i].X > 0.5]
 
         return k_paths
+
+    def select_k_paths_all_pairs(self) -> dict[tuple[int, int], list[tuple[int]]]:
+        self.all_theta_min, self.all_theta_max = self._calc_theta()
+        return super().select_k_paths_all_pairs()
 
     def _calc_theta(self) -> tuple[dict[tuple[int, int], float], dict[tuple[int, int], float]]:
         """method to calculate theta_min and theta_max for all nodes pair"""

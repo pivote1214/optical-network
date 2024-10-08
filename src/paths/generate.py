@@ -113,7 +113,8 @@ def main():
                                     linkage_method=linkage_method, 
                                     criterion=citerion, 
                                     threshold=threshold, 
-                                    w_obj=w_obj
+                                    w_obj=w_obj, 
+                                    timelimit=600.0
                                     )
                                 path_generator = NodePairClustering(graph_name, n_paths, params)
                                 path_generator.save_selected_paths()

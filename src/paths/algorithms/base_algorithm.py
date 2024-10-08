@@ -36,7 +36,7 @@ class PathSelectionAlgorithm:
         """method to select k paths for single pair"""
         raise NotImplementedError("This method should be implemented by subclasses")
 
-    def select_k_paths_all_pairs(self) -> dict[tuple[int, int]]:
+    def select_k_paths_all_pairs(self) -> dict[tuple[int, int], list[tuple[int]]]:
         """method to select k paths for all pairs"""
         all_paths = {}
         nodes_pair = list(combinations(self.graph.nodes, 2))

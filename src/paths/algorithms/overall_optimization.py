@@ -1,6 +1,8 @@
 import os
 import sys
 
+from utils.files import set_paths_file_path
+
 sys.path.append(
     os.path.abspath(
         os.path.join(os.path.dirname(__file__), os.pardir, os.pardir, os.pardir)
@@ -16,7 +18,7 @@ from gurobipy import GRB, Model, Var, quicksum
 from scipy.cluster.hierarchy import fcluster, linkage
 
 from src.paths.algorithms.base_algorithm import PathSelectionAlgorithm
-from utils.network import calc_path_similarity, calc_path_weight, load_network
+from utils.network import calc_path_similarity, calc_path_weight
 
 
 @dataclass
@@ -29,6 +31,7 @@ class NodePairClusteringParams:
     criterion:      str
     threshold:      float
     w_obj:          float
+    timelimit:      float
 
 
 class NodePairClustering(PathSelectionAlgorithm):
@@ -121,8 +124,18 @@ class NodePairClustering(PathSelectionAlgorithm):
 
         # ILP定式化
         model = Model("node-pair-clustering-method")
-        # 出力抑制
-        model.Params.OutputFlag = 0
+        # ログファイルの設定
+        # log to console: off, log file: on
+        log_file_paths = set_paths_file_path(
+            algorithm=self.__class__.__name__, 
+            network_name=self.graph_name, 
+            params=self.params, 
+            n_paths=self.n_paths
+            )
+        model.setParam('LogToConsole', 0)
+        model.setParam('LogFile', os.path.join(os.path.dirname(log_file_paths), f'gurobi_log.log'))
+        # set time limit
+        model.setParam(GRB.Param.TimeLimit, self.params.timelimit)
         # 変数の定義
         # x_{uvp} の定義
         x_uvp = {}
