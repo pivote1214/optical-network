@@ -107,8 +107,10 @@ class NodePairClustering(PathSelectionAlgorithm):
             shortest_path = nx.dijkstra_path(self.graph, u, v, weight='weight')
             pair2shortest_path[(u, v)] = shortest_path
             # 選択の母集団となるパス集合の生成
-            mother_set = nx.all_simple_paths(self.graph, u, v, cutoff=self.params.cutoff)
-            mother_set = [path for path in mother_set if path != shortest_path] # 最短パスを除く
+            mother_set = nx.shortest_simple_paths(self.graph, u, v)
+            mother_set = [
+                path for path in mother_set 
+                if path != shortest_path and calc_path_weight(self.graph, path, 'physical-length') <= 6300] # 最短パスを除く
             pair2mother_set[(u, v)] = mother_set
             # パスにインデックスを付与
             for path in mother_set:

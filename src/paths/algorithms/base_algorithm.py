@@ -78,10 +78,10 @@ class PathSelectionAlgorithm:
             n_paths=self.n_paths
             )
         # if folder exists, continue
-        if os.path.exists(os.path.dirname(file_paths)):
+        if os.path.exists(file_paths):
             return
         else:
-            os.makedirs(os.path.dirname(file_paths))
+            os.makedirs(os.path.dirname(file_paths), exist_ok=True)
         # select paths
         candidate_paths_set = self.select_k_paths_all_pairs()
         # save paths
