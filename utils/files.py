@@ -1,5 +1,6 @@
 import os
 import sys
+
 sys.path.append(os.path.abspath('../'))
 
 import pickle
@@ -42,14 +43,15 @@ def set_paths_file_path(
         params (dict[str, any]): アルゴリズムのパラメータ
         n_paths (int): パス数
     """
-    # get timestamp
-    timestamp = datetime.now().strftime('%Y-%m-%d-%H-%M-%S%f')
+    # # get timestamp
+    # timestamp = datetime.now().strftime('%Y-%m-%d-%H-%M-%S%f')
     # get params with '.' replaced by '_'
     params_name = [f"{key}={str(getattr(params, key)).replace('.', 'd')}" 
-                   for key in params.__annotations__]
+                   for key in params.__annotations__ 
+                   if key not in ['timelimit']]
     paths_file_path = os.path.join(
         PATHS_DIR, algorithm, network_name, 
-        *params_name, f"n-paths={n_paths}_{timestamp}.pkl"
+        *params_name, f"n-paths={n_paths}.pkl"
         )
 
     return paths_file_path
@@ -59,45 +61,27 @@ def set_result_dir(
     experiment_name: str, 
     algorithm: str, 
     network_name: str, 
-    params: dict[str, Any], 
+    params: Any, 
     n_paths: int
     ) -> str:
     """
-    資源割当問題の結果を保存するディレクトリのパスを設定する関数
+    グラフ上のすべてのパスを保存するファイルパスを設定する関数
 
     Args:
-        experiment_name (str): 実験名
         algorithm (str): パス選択のアルゴリズム
         network_name (str): ネットワーク名
         params (dict[str, any]): アルゴリズムのパラメータ
         n_paths (int): パス数
-
-    Returns:
-        str: 結果を保存するディレクトリのパス
     """
-    if algorithm == 'k-shortest-paths':
-        dir_path = os.path.join(
-            OUT_DIR, experiment_name, algorithm, network_name, 
-            f'path-weight_{params["path_weight"]}', f'n-paths_{n_paths}'
-            )
-    elif algorithm == 'k-dissimilar-paths':
-        dir_path = os.path.join(
-            OUT_DIR, experiment_name, algorithm, network_name, 
-            f'sim-weight_{params["sim_weight"]}', f'n-paths_{n_paths}'
-            )
-    elif algorithm == 'k-shortest-paths-with-similarity-constraint':
-        dir_path = os.path.join(
-            OUT_DIR, experiment_name, algorithm, network_name, 
-            f'path-weight_{params["path_weight"]}', f'sim-weight_{params["sim_weight"]}', 
-            f'alpha_{params["alpha"]}'.replace('.', 'd'), f'n-paths_{n_paths}'
-            )
-    elif algorithm == 'hierarchical-clustering':
-        dir_path = os.path.join(
-            OUT_DIR, experiment_name, algorithm, network_name, 
-            f'path-weight_{params["path_weight"]}', f'sim-weight_{params["sim_weight"]}', 
-            f'cls-distance_{params["cls_distance"]}', f'n-paths_{n_paths}'
-            )
-    else:
-        raise ValueError('algorithmの値が不正です')
+    # # get timestamp
+    # timestamp = datetime.now().strftime('%Y-%m-%d-%H-%M')
+    # get params with '.' replaced by '_'
+    params_name = [f"{key}={str(getattr(params, key)).replace('.', 'd')}" 
+                   for key in params.__annotations__ 
+                   if key not in ['timelimit']]
+    result = os.path.join(
+        OUT_DIR, experiment_name, algorithm, network_name, 
+        *params_name, f"n-paths={n_paths}"
+        )
 
-    return dir_path
+    return result

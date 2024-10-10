@@ -14,26 +14,34 @@ from utils.namespaces import OUT_DIR
 from utils.files import set_paths_file_path, set_result_dir
 from src.optimize.models.RSA_PATH_CHANNEL.params import Parameter, TimeLimit, Width
 from src.optimize.models.RSA_PATH_CHANNEL.optimizer import PathChannelOptimizer
+from src.paths.algorithms.k_shortest_paths import KShortestPathsParams
+from src.paths.algorithms.overall_optimization import NodePairClusteringParams
 
 
 if __name__ == "__main__":
     # dummy
     dummy = gp.Model('dummy')
     # experiment number
-    experiment_name = "master-thesis"
+    experiment_name = input('experiment_name: ')
     # set parameters (RSA-parameter)
     model_name              = 'RSA_PATH_CHANNEL'
     num_slots               = 320
-    num_demands             = 120
+    num_demands             = 50
     demands_population      = [50, 100, 150, 200]
     demands_seeds_values    = [seed * 2 for seed in range(1, 11)]
     # set parameters (Path-parameter)
-    network_names           = ['JPN12', 'NSF', 'GRID3x4', 'EURO16']
+    network_names           = [
+        'JPN12', 
+        'GRID3x3', 
+        # 'NSF', 
+        # 'EURO16'
+        ]
     path_algo_list          = [
-        'k-shortest-paths', 
-        'k-dissimilar-paths', 
-        'k-shortest-paths-with-similarity-constraint', 
+        'KShortestPaths', 
+        # 'k-dissimilar-paths', 
+        # 'k-shortest-paths-with-similarity-constraint', 
         # 'hierarchical-clustering',　
+        'NodePairClustering', 
         ]
     path_weight_list        = [
         'hop', 
@@ -54,6 +62,9 @@ if __name__ == "__main__":
     width                   = Width(OC=37.5, GB=6.25, FS=12.5)
     TRAFFIC_BPSK            = 50
 
+    threshold_values        = [0.75]
+    w_obj_values            = [round(i * 0.5, 1) for i in range(3)]
+
     # make directory
     EX_DIR = os.path.join(OUT_DIR, experiment_name)
     os.makedirs(EX_DIR, exist_ok=True)
@@ -67,27 +78,45 @@ if __name__ == "__main__":
         f.write(f'demands_population:   {demands_population}\n')
         f.write(f'bound_algo:           {bound_algo}\n')
 
+    # # run
+    # for network_name in tqdm.tqdm(network_names, desc='network'.ljust(20)):
+    #     graph = load_network(network_name)
+    #     for path_algo in tqdm.tqdm(path_algo_list, desc='path_algo'.ljust(20), leave=False):
+    #         for n_paths in tqdm.tqdm(n_paths_list, desc='n_paths'.ljust(20), leave=False):
+    #             for cls_distance in tqdm.tqdm(cls_distance_list, desc='cls_distance'.ljust(20), leave=False):
+    #                 for alpha in tqdm.tqdm(alpha_list, desc='alpha'.ljust(20), leave=False):
+    #                     for sim_weight in tqdm.tqdm(sim_weight_list, desc='sim_weight'.ljust(20), leave=False):
+    #                         for path_weight in tqdm.tqdm(path_weight_list, desc='path_weight'.ljust(20), leave=False):
+
     # run
     for network_name in tqdm.tqdm(network_names, desc='network'.ljust(20)):
         graph = load_network(network_name)
-        for path_algo in tqdm.tqdm(path_algo_list, desc='path_algo'.ljust(20), leave=False):
-            for n_paths in tqdm.tqdm(n_paths_list, desc='n_paths'.ljust(20), leave=False):
-                for cls_distance in tqdm.tqdm(cls_distance_list, desc='cls_distance'.ljust(20), leave=False):
-                    for alpha in tqdm.tqdm(alpha_list, desc='alpha'.ljust(20), leave=False):
-                        for sim_weight in tqdm.tqdm(sim_weight_list, desc='sim_weight'.ljust(20), leave=False):
-                            for path_weight in tqdm.tqdm(path_weight_list, desc='path_weight'.ljust(20), leave=False):
+        for n_paths in tqdm.tqdm(n_paths_list, desc='n_paths'.ljust(20), leave=False):
+            for length_metric in tqdm.tqdm(path_weight_list, desc='length_metric'.ljust(20), leave=False):
+                for sim_metric in tqdm.tqdm(sim_weight_list, desc='sim_metric'.ljust(20), leave=False):
+                    for threshold in tqdm.tqdm(threshold_values, desc='threshold'.ljust(20), leave=False):
+                        for w_obj in tqdm.tqdm(w_obj_values, desc='w_obj'.ljust(20), leave=False):
+                            for path_algo in tqdm.tqdm(path_algo_list, desc='path_algo'.ljust(20), leave=False):
+                                if path_algo == 'KShortestPaths':
+                                    params = KShortestPathsParams(length_metric=length_metric)
+                                elif path_algo == 'NodePairClustering':
                                 # set file path
-                                params = {
-                                    'path_weight': path_weight, 
-                                    'sim_weight': sim_weight, 
-                                    'alpha': alpha, 
-                                    'cls_distance': cls_distance
-                                    }
+                                    params = NodePairClusteringParams(
+                                        length_metric=length_metric, 
+                                        sim_metric=sim_metric, 
+                                        n_ref_paths=1, 
+                                        cutoff=None, 
+                                        linkage_method='average', 
+                                        criterion='distance', 
+                                        threshold=threshold, 
+                                        w_obj=w_obj, 
+                                        timelimit=600.0
+                                        )
                                 PATHS_FILE = set_paths_file_path(
-                                    algorithm=path_algo, 
-                                    network_name=network_name, 
-                                    params=params, 
-                                    n_paths=n_paths
+                                    path_algo, 
+                                    network_name, 
+                                    params, 
+                                    n_paths
                                     )
                                 RESULT_DIR = set_result_dir(
                                     experiment_name=experiment_name, 
