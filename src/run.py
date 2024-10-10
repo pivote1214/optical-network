@@ -26,13 +26,13 @@ if __name__ == "__main__":
     # set parameters (RSA-parameter)
     model_name              = 'RSA_PATH_CHANNEL'
     num_slots               = 320
-    num_demands             = 50
+    num_demands             = 20
     demands_population      = [50, 100, 150, 200]
     demands_seeds_values    = [seed * 2 for seed in range(1, 11)]
     # set parameters (Path-parameter)
     network_names           = [
         'JPN12', 
-        'GRID3x3', 
+        # 'GRID3x3', 
         # 'NSF', 
         # 'EURO16'
         ]
@@ -41,7 +41,7 @@ if __name__ == "__main__":
         # 'k-dissimilar-paths', 
         # 'k-shortest-paths-with-similarity-constraint', 
         # 'hierarchical-clustering',　
-        'NodePairClustering', 
+        # 'NodePairClustering', 
         ]
     path_weight_list        = [
         'hop', 
@@ -55,7 +55,13 @@ if __name__ == "__main__":
         'single', 
         # 'average', 
         ]
-    alpha_list              = [round(i * 0.25, 2) for i in range(1, 4)]
+    alpha_list = [
+        # 0.00, 
+        # 0.25, 
+        # 0.50, 
+        # 0.75, 
+        # 1.00
+        ]
     n_paths_list            = [2, 3]
     bound_algo              = 'hybrid'
     timelimit               = TimeLimit(lower=30.0, upper=150.0, main=720.0)
@@ -89,14 +95,14 @@ if __name__ == "__main__":
     #                         for path_weight in tqdm.tqdm(path_weight_list, desc='path_weight'.ljust(20), leave=False):
 
     # run
-    for network_name in tqdm.tqdm(network_names, desc='network'.ljust(20)):
+    for network_name in network_names:
         graph = load_network(network_name)
-        for n_paths in tqdm.tqdm(n_paths_list, desc='n_paths'.ljust(20), leave=False):
-            for length_metric in tqdm.tqdm(path_weight_list, desc='length_metric'.ljust(20), leave=False):
-                for sim_metric in tqdm.tqdm(sim_weight_list, desc='sim_metric'.ljust(20), leave=False):
-                    for threshold in tqdm.tqdm(threshold_values, desc='threshold'.ljust(20), leave=False):
-                        for w_obj in tqdm.tqdm(w_obj_values, desc='w_obj'.ljust(20), leave=False):
-                            for path_algo in tqdm.tqdm(path_algo_list, desc='path_algo'.ljust(20), leave=False):
+        for n_paths in n_paths_list:
+            for length_metric in path_weight_list:
+                for sim_metric in sim_weight_list:
+                    for threshold in threshold_values:
+                        for w_obj in w_obj_values:
+                            for path_algo in path_algo_list:
                                 if path_algo == 'KShortestPaths':
                                     params = KShortestPathsParams(length_metric=length_metric)
                                 elif path_algo == 'NodePairClustering':
@@ -142,7 +148,7 @@ if __name__ == "__main__":
                                 result_table = pd.DataFrame(index=index, columns=columns)
                                 result_table.index.name = 'seed'
                                 # write result_table
-                                for demands_seed in tqdm.tqdm(demands_seeds_values, desc='demands_seed'.ljust(20), leave=False):
+                                for demands_seed in demands_seeds_values:
                                     # start!
                                     start_time = time.time()
                                     # set parameters
