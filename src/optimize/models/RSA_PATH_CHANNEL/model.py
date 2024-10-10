@@ -141,9 +141,9 @@ class PathChannelModel:
 
         self._set_variables()
         self._set_objective_function()
-        start = time.time()
+        # start = time.time()
         self._set_constraints()
-        print(f'Elapsed time for setting constraints: {time.time() - start:.2f} sec')
+        # print(f'Elapsed time for setting constraints: {time.time() - start:.2f} sec')
 
     def calculate_used_slots(self) -> int:
         used_slots = 0

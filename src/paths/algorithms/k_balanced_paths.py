@@ -18,7 +18,7 @@ from src.paths.algorithms.k_shortest_paths import KShortestPaths
 from utils.network import calc_path_similarity, calc_path_weight
 
 
-@dataclass
+@dataclass(frozen=True)
 class KSPwithSimilarityConstraintParams:
     length_metric:    str
     sim_metric:       str

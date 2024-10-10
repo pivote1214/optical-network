@@ -13,7 +13,7 @@ from src.paths.algorithms.base_algorithm import PathSelectionAlgorithm
 from utils.network import calc_path_weight
 
 
-@dataclass
+@dataclass(frozen=True)
 class KShortestPathsParams:
     length_metric:  str
 

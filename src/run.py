@@ -1,11 +1,13 @@
 import os
 import sys
+
 sys.path.append(os.path.abspath('..'))
 
 import time
-import copy
+import argparse
+# import logging
+from tqdm import tqdm
 
-import tqdm
 import pandas as pd
 import gurobipy as gp
 
@@ -16,175 +18,202 @@ from src.optimize.models.RSA_PATH_CHANNEL.params import Parameter, TimeLimit, Wi
 from src.optimize.models.RSA_PATH_CHANNEL.optimizer import PathChannelOptimizer
 from src.paths.algorithms.k_shortest_paths import KShortestPathsParams
 from src.paths.algorithms.overall_optimization import NodePairClusteringParams
+from src.paths.algorithms.k_balanced_paths import KSPwithSimilarityConstraintParams
+from src.paths.algorithms.hierarchical_clustering import HierarchicalClusteringParams
 
+
+# # Configure logging
+# logging.basicConfig(level=logging.INFO)
+# logger = logging.getLogger(__name__)
+
+def parse_arguments():
+    parser = argparse.ArgumentParser(description='Run optimization experiments.')
+    parser.add_argument('experiment_name', type=str, help='Name of the experiment')
+    return parser.parse_args()
+
+def write_global_config(ex_dir, config):
+    config_file = os.path.join(ex_dir, 'global_config.txt')
+    with open(config_file, 'w') as f:
+        f.write('Global Configurations:\n')
+        for key, value in config.items():
+            f.write(f'{key}: {value}\n')
+    # logger.info(f'Global configuration written to {config_file}')
+
+def initialize_parameters():
+    return {
+        'model_name': 'RSA_PATH_CHANNEL',
+        'num_slots': 320,
+        'num_demands': 100,
+        'demands_population': [50, 100, 150, 200],
+        'demands_seeds': [seed * 2 for seed in range(1, 11)],
+        'network_names': ['JPN12', 'GRID3x4', 'NSF'],
+        'path_algorithms': [
+            'NodePairClustering', 
+            'KShortestPaths', 
+            'KSPwithSimilarityConstraint', 
+            'HierarchicalClustering'
+            ],
+        'path_weights': ['hop'],
+        'sim_weights': ['physical-length'],
+        'cls_distances': ['single', 'average'],
+        'alpha_list': [0.25, 0.50],
+        'n_paths_list': [2, 3],
+        'bound_algo': 'hybrid',
+        'timelimit': TimeLimit(lower=30.0, upper=150.0, main=720.0),
+        'width': Width(OC=37.5, GB=6.25, FS=12.5),
+        'TRAFFIC_BPSK': 50,
+        'threshold_values': [0.75],
+        'w_obj_values': [0.5],
+    }
+
+
+def run_experiment(params, ex_dir):
+    os.makedirs(ex_dir, exist_ok=True)
+    write_global_config(ex_dir, {
+        'num_slots': params['num_slots'],
+        'num_demands': params['num_demands'],
+        'demands_population': params['demands_population'],
+        'bound_algo': params['bound_algo'],
+    })
+    
+    algo_params_dict = {}
+
+    for path_algo in params['path_algorithms']:
+        algo_params_dict[path_algo] = set()
+        for length_metric in params['path_weights']:
+            for sim_metric in params['sim_weights']:
+                for alpha in params['alpha_list']:
+                    for threshold in params['threshold_values']:
+                        for w_obj in params['w_obj_values']:
+                            algo_params = create_algo_params(
+                                path_algo, length_metric, sim_metric, alpha, threshold, w_obj
+                            )
+                            if algo_params is not None:
+                                algo_params_dict[path_algo].add(algo_params)
+                                        
+    for network_name in tqdm(params['network_names'], desc="Networks".ljust(15)):
+        graph = load_network(network_name)
+        for n_paths in tqdm(params['n_paths_list'], desc="Number of Paths".ljust(15), leave=False):
+            for path_algo, params_set in tqdm(algo_params_dict.items(), desc="Path Algorithms".ljust(15), leave=False):
+                for algo_params in tqdm(params_set, desc="Params".ljust(15), leave=False):
+                    run_rsa_for_algo(
+                        params, network_name, graph, n_paths, path_algo, algo_params
+                        )
+
+
+def create_algo_params(path_algo, length_metric, sim_metric, alpha, threshold, w_obj):
+    if path_algo == 'KShortestPaths':
+        return KShortestPathsParams(length_metric=length_metric)
+    elif path_algo == 'NodePairClustering':
+        return NodePairClusteringParams(
+            length_metric=length_metric,
+            sim_metric=sim_metric,
+            n_ref_paths=1,
+            cutoff=None,
+            linkage_method='average',
+            criterion='distance',
+            threshold=threshold,
+            w_obj=w_obj,
+            timelimit=600.0
+        )
+    elif path_algo == 'KSPwithSimilarityConstraint':
+        return KSPwithSimilarityConstraintParams(
+            length_metric=length_metric, 
+            sim_metric=sim_metric, 
+            alpha=alpha
+        )
+    elif path_algo == 'HierarchicalClustering':
+        return HierarchicalClusteringParams(
+            length_metric=length_metric, 
+            sim_metric=sim_metric, 
+            linkage_method='average'
+        )
+    else:
+        # logger.warning(f'Path algorithm {path_algo} is not supported.')
+        return None
+
+
+def run_rsa_for_algo(params, network_name, graph, n_paths, path_algo, algo_params):
+    paths_file = set_paths_file_path(path_algo, network_name, algo_params, n_paths)
+    result_dir = set_result_dir(
+        experiment_name=params['experiment_name'],
+        algorithm=path_algo,
+        network_name=network_name,
+        params=algo_params,
+        n_paths=n_paths
+    )
+    result_file = os.path.join(result_dir, 'summary.csv')
+
+    if os.path.exists(result_file):
+        # logger.info(f'Result file {result_file} already exists. Skipping.')
+        return
+    else:
+        os.makedirs(os.path.dirname(result_file), exist_ok=True)
+
+    result_table = initialize_result_table(params['demands_seeds'])
+    
+    for demands_seed in tqdm(params['demands_seeds'], desc="Demands Seeds".ljust(15), leave=False):
+        start_time = time.time()
+        optimizer_params = Parameter(
+            network_name=network_name, 
+            graph=graph,
+            num_slots=params['num_slots'],
+            num_demands=params['num_demands'],
+            demands_population=params['demands_population'],
+            demands_seed=demands_seed,
+            paths_dir=paths_file,
+            result_dir=result_dir,
+            bound_algo=params['bound_algo'],
+            timelimit=params['timelimit'],
+            width=params['width'],
+            TRAFFIC_BPSK=params['TRAFFIC_BPSK']
+        )
+        optimizer = PathChannelOptimizer(optimizer_params)
+        main_output, lower_output, upper_output = optimizer.run()
+        calc_time = time.time() - start_time
+
+        update_result_table(
+            result_table, demands_seed, main_output,
+            lower_output, upper_output, calc_time
+        )
+        result_table.to_csv(result_file, index=True)
+        # logger.info(f'Results for seed {demands_seed} saved to {result_file}')
+
+
+def initialize_result_table(seeds):
+    columns = [
+        'used_slots', 'Gap(main)', 'time(main)',
+        'lower_bound', 'Gap(lower)', 'time(lower)',
+        'upper_bound', 'Gap(upper)', 'time(upper)',
+        'time(all)'
+    ]
+    result_table = pd.DataFrame(index=seeds, columns=columns)
+    result_table.index.name = 'seed'
+    return result_table
+
+def update_result_table(table, seed, main_output, lower_output, upper_output, total_time):
+    table.at[seed, 'used_slots'] = int(main_output.used_slots)
+    table.at[seed, 'Gap(main)'] = round(main_output.gap * 100, 2)
+    table.at[seed, 'time(main)'] = round(main_output.calculation_time, 3)
+
+    table.at[seed, 'lower_bound'] = int(lower_output.lower_bound)
+    table.at[seed, 'Gap(lower)'] = round(lower_output.gap * 100, 2)
+    table.at[seed, 'time(lower)'] = round(lower_output.calculation_time, 3)
+
+    table.at[seed, 'upper_bound'] = int(upper_output.upper_bound)
+    table.at[seed, 'Gap(upper)'] = round(upper_output.gap * 100, 2)
+    table.at[seed, 'time(upper)'] = round(upper_output.calculation_time, 3)
+
+    table.at[seed, 'time(all)'] = round(total_time, 3)
+
+def main():
+    # dummy
+    gp.Model()
+    args = parse_arguments()
+    params = initialize_parameters()
+    params['experiment_name'] = args.experiment_name
+    ex_dir = os.path.join(OUT_DIR, args.experiment_name)
+    run_experiment(params, ex_dir)
 
 if __name__ == "__main__":
-    # dummy
-    dummy = gp.Model('dummy')
-    # experiment number
-    experiment_name = input('experiment_name: ')
-    # set parameters (RSA-parameter)
-    model_name              = 'RSA_PATH_CHANNEL'
-    num_slots               = 320
-    num_demands             = 20
-    demands_population      = [50, 100, 150, 200]
-    demands_seeds_values    = [seed * 2 for seed in range(1, 11)]
-    # set parameters (Path-parameter)
-    network_names           = [
-        'JPN12', 
-        # 'GRID3x3', 
-        # 'NSF', 
-        # 'EURO16'
-        ]
-    path_algo_list          = [
-        'KShortestPaths', 
-        # 'k-dissimilar-paths', 
-        # 'k-shortest-paths-with-similarity-constraint', 
-        # 'hierarchical-clustering',　
-        # 'NodePairClustering', 
-        ]
-    path_weight_list        = [
-        'hop', 
-        # 'expected-used-slots', 
-        ]
-    sim_weight_list         = [
-        'physical-length', 
-        # 'all-one', 
-        ]
-    cls_distance_list       = [
-        'single', 
-        # 'average', 
-        ]
-    alpha_list = [
-        # 0.00, 
-        # 0.25, 
-        # 0.50, 
-        # 0.75, 
-        # 1.00
-        ]
-    n_paths_list            = [2, 3]
-    bound_algo              = 'hybrid'
-    timelimit               = TimeLimit(lower=30.0, upper=150.0, main=720.0)
-    width                   = Width(OC=37.5, GB=6.25, FS=12.5)
-    TRAFFIC_BPSK            = 50
-
-    threshold_values        = [0.75]
-    w_obj_values            = [round(i * 0.5, 1) for i in range(3)]
-
-    # make directory
-    EX_DIR = os.path.join(OUT_DIR, experiment_name)
-    os.makedirs(EX_DIR, exist_ok=True)
-
-    # write global config
-    CONFIG_FILE_NAME = os.path.join(EX_DIR, 'global_config.txt')
-    with open(CONFIG_FILE_NAME, 'w') as f:
-        f.write('global config\n')
-        f.write(f'num_slots:            {num_slots}\n')
-        f.write(f'num_demands:          {num_demands}\n')
-        f.write(f'demands_population:   {demands_population}\n')
-        f.write(f'bound_algo:           {bound_algo}\n')
-
-    # # run
-    # for network_name in tqdm.tqdm(network_names, desc='network'.ljust(20)):
-    #     graph = load_network(network_name)
-    #     for path_algo in tqdm.tqdm(path_algo_list, desc='path_algo'.ljust(20), leave=False):
-    #         for n_paths in tqdm.tqdm(n_paths_list, desc='n_paths'.ljust(20), leave=False):
-    #             for cls_distance in tqdm.tqdm(cls_distance_list, desc='cls_distance'.ljust(20), leave=False):
-    #                 for alpha in tqdm.tqdm(alpha_list, desc='alpha'.ljust(20), leave=False):
-    #                     for sim_weight in tqdm.tqdm(sim_weight_list, desc='sim_weight'.ljust(20), leave=False):
-    #                         for path_weight in tqdm.tqdm(path_weight_list, desc='path_weight'.ljust(20), leave=False):
-
-    # run
-    for network_name in network_names:
-        graph = load_network(network_name)
-        for n_paths in n_paths_list:
-            for length_metric in path_weight_list:
-                for sim_metric in sim_weight_list:
-                    for threshold in threshold_values:
-                        for w_obj in w_obj_values:
-                            for path_algo in path_algo_list:
-                                if path_algo == 'KShortestPaths':
-                                    params = KShortestPathsParams(length_metric=length_metric)
-                                elif path_algo == 'NodePairClustering':
-                                # set file path
-                                    params = NodePairClusteringParams(
-                                        length_metric=length_metric, 
-                                        sim_metric=sim_metric, 
-                                        n_ref_paths=1, 
-                                        cutoff=None, 
-                                        linkage_method='average', 
-                                        criterion='distance', 
-                                        threshold=threshold, 
-                                        w_obj=w_obj, 
-                                        timelimit=600.0
-                                        )
-                                PATHS_FILE = set_paths_file_path(
-                                    path_algo, 
-                                    network_name, 
-                                    params, 
-                                    n_paths
-                                    )
-                                RESULT_DIR = set_result_dir(
-                                    experiment_name=experiment_name, 
-                                    algorithm=path_algo, 
-                                    network_name=network_name, 
-                                    params=params, 
-                                    n_paths=n_paths
-                                    )
-                                # RESULT_FILE が存在するか判定
-                                RESULT_FILE = os.path.join(RESULT_DIR, 'summary.csv')
-                                if os.path.exists(RESULT_FILE):
-                                    continue
-                                else:
-                                    os.makedirs(os.path.dirname(RESULT_FILE), exist_ok=True)
-                                # make table
-                                index = copy.deepcopy(demands_seeds_values)
-                                columns = [
-                                    'used_slots',  'Gap(main)',  'time(main)', 
-                                    'lower_bound', 'Gap(lower)', 'time(lower)', 
-                                    'upper_bound', 'Gap(upper)', 'time(upper)', 
-                                    'time (all)'
-                                    ]
-                                result_table = pd.DataFrame(index=index, columns=columns)
-                                result_table.index.name = 'seed'
-                                # write result_table
-                                for demands_seed in demands_seeds_values:
-                                    # start!
-                                    start_time = time.time()
-                                    # set parameters
-                                    params = Parameter(
-                                        network_name=network_name, 
-                                        graph=graph, 
-                                        num_slots=num_slots, 
-                                        num_demands=num_demands, 
-                                        demands_population=demands_population, 
-                                        demands_seed=demands_seed, 
-                                        paths_dir=PATHS_FILE, 
-                                        result_dir=RESULT_DIR, 
-                                        bound_algo=bound_algo, 
-                                        timelimit=timelimit, 
-                                        width=width, 
-                                        TRAFFIC_BPSK=TRAFFIC_BPSK
-                                        )
-                                    # optimize
-                                    optimizer = PathChannelOptimizer(params)
-                                    main_model_output, lower_bound_output, upper_bound_output = optimizer.run()
-                                    # main_model_output, _, _ = optimizer.run()
-                                    # end!
-                                    calc_time = time.time() - start_time
-                                    # write result to result_table
-                                    result_table.loc[demands_seed, 'lower_bound']   = int(lower_bound_output.lower_bound)
-                                    result_table.loc[demands_seed, 'Gap(lower)']    = round(lower_bound_output.gap * 100, 2)
-                                    result_table.loc[demands_seed, 'time(lower)']   = round(lower_bound_output.calculation_time, 3)
-                                    # write upper bound result to result_table
-                                    result_table.loc[demands_seed, 'upper_bound']   = int(upper_bound_output.upper_bound)
-                                    result_table.loc[demands_seed, 'Gap(upper)']    = round(upper_bound_output.gap * 100, 2)
-                                    result_table.loc[demands_seed, 'time(upper)']   = round(upper_bound_output.calculation_time, 3)
-                                    # write main model result to result_table
-                                    result_table.loc[demands_seed, 'used_slots']    = int(main_model_output.used_slots)
-                                    result_table.loc[demands_seed, 'Gap(main)']     = round(main_model_output.gap * 100, 2)
-                                    result_table.loc[demands_seed, 'time(main)']    = round(main_model_output.calculation_time, 3)
-                                    # write whole time to result_table
-                                    result_table.loc[demands_seed, 'time(all)']     = round(calc_time, 3)
-                                    # save result_table
-                                    result_table.to_csv(RESULT_FILE, index=True)
+    main()

@@ -21,7 +21,7 @@ from src.paths.algorithms.base_algorithm import PathSelectionAlgorithm
 from utils.network import calc_path_similarity, calc_path_weight
 
 
-@dataclass
+@dataclass(frozen=True)
 class NodePairClusteringParams:
     length_metric:  str
     sim_metric:     str
