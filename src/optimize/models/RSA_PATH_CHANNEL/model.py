@@ -1,6 +1,7 @@
 import os
 import time
 from dataclasses import dataclass
+from turtle import mode
 from typing import Optional
 
 import gurobipy as gp
@@ -72,48 +73,66 @@ class PathChannelModel:
 
     def _set_constraints(self) -> None:
         # set nonoverlap constraint
-        for d_ind, _ in self.input.D.items():
-            self.problem.addConstr(
-                gp.quicksum(
-                    self.x[d_ind, p_ind, c_ind]
-                    for p_ind, _ in enumerate(self.input.P[d_ind])
-                    for c_ind, _ in enumerate(self.input.C[d_ind, p_ind])
-                ) == 1
-            )
+        x_dind_indices = {
+            d_ind: [
+                (d_ind, p_ind, c_ind)
+                for p_ind in range(len(self.input.P[d_ind]))
+                for c_ind in range(len(self.input.C[d_ind, p_ind]))
+            ]
+            for d_ind in self.input.D
+        }
+        self.problem.addConstrs(
+            (gp.quicksum(self.x[idx] for idx in x_dind_indices[d_ind]) == 1
+            for d_ind in self.input.D),
+            name='nonoverlap'
+        )
+
         # set y_es constraint
-        for e_ind, _ in self.input.E.items():
-            for s_ind, _ in enumerate(self.input.S):
-                self.problem.addConstr(
-                    gp.quicksum(
-                        self.x[d_ind, p_ind, c_ind] *
-                        self.input.gamma[d_ind, p_ind, c_ind, s_ind] *
-                        self.input.delta[e_ind, d_ind, p_ind]
-                        for d_ind, _ in self.input.D.items()
-                        for p_ind, _ in enumerate(self.input.P[d_ind])
-                        for c_ind, _ in enumerate(self.input.C[d_ind, p_ind])
-                    ) <= self.y_es[e_ind, s_ind]
-                )
+        # Precompute coefficients and indices where gamma and delta are non-zero
+        for e_ind in self.input.E:
+            for s_ind in range(len(self.input.S)):
+                expr = gp.LinExpr()
+                for d_ind in self.input.D:
+                    delta_val = self.input.delta.get((e_ind, d_ind), {})
+                    for p_ind in range(len(self.input.P[d_ind])):
+                        if p_ind not in delta_val:
+                            continue
+                        delta_e_d_p = delta_val[p_ind]
+                        for c_ind in range(len(self.input.C[d_ind, p_ind])):
+                            gamma_val = self.input.gamma.get((d_ind, p_ind, c_ind, s_ind), 0)
+                            if gamma_val != 0:
+                                idx = (d_ind, p_ind, c_ind)
+                                expr.addTerms(gamma_val * delta_e_d_p, self.x[idx])
+                self.problem.addConstr(expr <= self.y_es[e_ind, s_ind], name=f'y_es_{e_ind}_{s_ind}')
+
         # set y_s constraint
-        for s_ind, _ in enumerate(self.input.S):
-            self.problem.addConstr(
-                gp.quicksum(
-                    self.y_es[e_ind, s_ind]
-                    for e_ind, _ in self.input.E.items()
-                ) <= len(self.input.E) * self.y_s[s_ind]
-            )
+        y_es_eind_indices = {
+            s_ind: [
+                (e_ind, s_ind)
+                for e_ind in self.input.E
+            ]
+            for s_ind in range(len(self.input.S))
+        }
+        self.problem.addConstrs(
+            (gp.quicksum(self.y_es[idx] for idx in y_es_eind_indices[s_ind]) <= len(self.input.E) * self.y_s[s_ind]
+            for s_ind in range(len(self.input.S))),
+            name='y_s'
+        )
+
         # set lower bound constraint
         if self.input.lower_bound is not None:
             self.problem.addConstr(
-                gp.quicksum(
-                    self.y_s[s_ind]
-                    for s_ind, _ in enumerate(self.input.S)
-                ) >= self.input.lower_bound
+                gp.quicksum(self.y_s[s_ind] for s_ind in range(len(self.input.S))) >= self.input.lower_bound,
+                name='lower_bound'
             )
-        # update constraints
+
+        # No need to call update() when using addConstrs
         self.problem.update()
+
 
     def _set_problem(self) -> None:
         self.problem = gp.Model(self.name)
+        # gp.setParam('Threads', 4)
         # log to console: off, log file: on
         self.problem.setParam('LogToConsole', 0)
         self.problem.setParam('LogFile', os.path.join(self.input.result_dir, f'{self.input.demand_seed:02}_main.log'))
@@ -122,7 +141,9 @@ class PathChannelModel:
 
         self._set_variables()
         self._set_objective_function()
+        start = time.time()
         self._set_constraints()
+        print(f'Elapsed time for setting constraints: {time.time() - start:.2f} sec')
 
     def calculate_used_slots(self) -> int:
         used_slots = 0
