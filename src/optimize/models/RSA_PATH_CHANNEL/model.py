@@ -1,7 +1,7 @@
 import os
 import time
 from dataclasses import dataclass
-from turtle import mode
+from collections import defaultdict
 from typing import Optional
 
 import gurobipy as gp
@@ -14,8 +14,8 @@ class PathChannelInput:
     D:              dict[int, tuple[int, int, int]]
     P:              dict[int, list[list[int]]]
     C:              dict[tuple[int, int], list[list[int]]]
-    delta:          dict[tuple[int, int, int], int]
-    gamma:          dict[tuple[int, int, int, int], int]
+    delta:          dict[tuple[int, int, int], bool]
+    gamma:          dict[tuple[int, int, int, int], bool]
     lower_bound:    int
     result_dir:     str
     demand_seed:    int
@@ -88,22 +88,22 @@ class PathChannelModel:
         )
 
         # set y_es constraint
-        # Precompute coefficients and indices where gamma and delta are non-zero
-        for e_ind in self.input.E:
-            for s_ind in range(len(self.input.S)):
-                expr = gp.LinExpr()
-                for d_ind in self.input.D:
-                    delta_val = self.input.delta.get((e_ind, d_ind), {})
-                    for p_ind in range(len(self.input.P[d_ind])):
-                        if p_ind not in delta_val:
-                            continue
-                        delta_e_d_p = delta_val[p_ind]
-                        for c_ind in range(len(self.input.C[d_ind, p_ind])):
-                            gamma_val = self.input.gamma.get((d_ind, p_ind, c_ind, s_ind), 0)
-                            if gamma_val != 0:
-                                idx = (d_ind, p_ind, c_ind)
-                                expr.addTerms(gamma_val * delta_e_d_p, self.x[idx])
-                self.problem.addConstr(expr <= self.y_es[e_ind, s_ind], name=f'y_es_{e_ind}_{s_ind}')
+        y_es_terms = defaultdict(list)
+
+        # Build the mapping from (e_ind, s_ind) to list of (d_ind, p_ind, c_ind)
+        for (d_ind, p_ind, c_ind, s_ind), gamma_val in self.input.gamma.items():
+            if gamma_val:
+                for e_ind in self.input.E:
+                    if self.input.delta.get((e_ind, d_ind, p_ind), False):
+                        y_es_terms[(e_ind, s_ind)].append((d_ind, p_ind, c_ind))
+
+        for (e_ind, s_ind), indices in y_es_terms.items():
+            self.problem.addConstr(
+                gp.quicksum(
+                    self.x[d_ind, p_ind, c_ind] for (d_ind, p_ind, c_ind) in indices
+                ) <= self.y_es[e_ind, s_ind]
+            )
+
 
         # set y_s constraint
         y_es_eind_indices = {
