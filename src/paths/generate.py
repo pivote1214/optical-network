@@ -44,7 +44,7 @@ def main():
         # 'expected-used-slots'
         ]
     sim_metric_list     = [
-        # 'physical-length', 
+        'physical-length', 
         'all-one'
         ]
     alpha_values        = [round(i * 0.25, 2) for i in range(1, 4)]

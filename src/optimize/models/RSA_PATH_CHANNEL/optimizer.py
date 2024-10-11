@@ -44,7 +44,7 @@ class PathChannelOptimizer:
             return self._run_hybrid()
         elif self.params.bound_algo == "lower only":
             return self._solve_lower_bound()
-        else:
+        elif self.params.bound_algo == "without":
             return self._run_without_bound_algo()
 
     def _make_input(self) -> PathLowerBoundInput:
