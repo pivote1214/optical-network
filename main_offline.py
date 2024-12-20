@@ -1,8 +1,9 @@
 import json
+import logging
 import os
+import random
 import time
 from typing import Any
-import random
 
 import hydra
 import networkx as nx
@@ -18,15 +19,23 @@ from src.rsa.optical_network import Width
 from src.rsa.path_channel import *
 
 
-def pause_sync():
-    """Google Driveを終了（同期停止）"""
-    os.system('pkill "Google Drive"')
-    print("Google Driveの同期を停止しました。")
+logger = logging.getLogger(__name__)
 
-def resume_sync():
-    """Google Driveを起動（同期再開）"""
-    os.system('open -a "Google Drive"')
-    print("Google Driveの同期を再開しました。")
+
+def disconnect_wifi():
+    """
+    disconnect Wi-Fi (only mac OS)
+    """
+    logger.info("Disconnecting Wi-Fi...")
+    os.system('networksetup -SetAirportPower en0 off')
+
+
+def connect_wifi():
+    """
+    connect Wi-Fi (only mac OS)
+    """
+    logger.info("Connecting Wi-Fi...")
+    os.system('networksetup -SetAirportPower en0 on')
 
 
 def set_result_dir(run_dir: str, **kwargs: Any) -> str:
@@ -49,9 +58,11 @@ def search_optimum_params(
     最適なパラメータを探索
     """
     params = cfg.selector.params
-    best_lb = float("inf")
-    best_params = []
-    for params in product_grid(params):
+    # best_lb = float("inf")
+    # best_params = []
+    n_params = len(list(product_grid(params)))
+    for idx, params in enumerate(product_grid(params)):
+        logger.info(f"Processing {params} ({idx+1}/{n_params})")
         path_selector = create_path_selector(
             cfg.selector.name, 
             graph, 
@@ -59,23 +70,26 @@ def search_optimum_params(
             max_length=max_length, 
             **params
             )
-        all_paths = path_selector.select_all_paths()
-        lb_total = 0
-        for seed in [cfg.demand.seed_lb * i for i in range(1, 101)]:
-            lb = calc_lower_bound(cfg, graph, run_dir, seed, all_paths)
-            lb_total += lb
-        lb_ave = lb_total / 100
-        if lb_ave < best_lb:
-            best_lb = lb_ave
-            best_params = [params]
-        elif lb_ave == best_lb:
-            best_params.append(params)
+        start = time.time()
+        path_selector.select_all_paths()
+        end = time.time()
+        logger.info(f"End: {end - start} [s]")
+    #     lb_total = 0
+    #     for seed in [cfg.demand.seed_lb * i for i in range(1, 101)]:
+    #         lb = calc_lower_bound(cfg, graph, run_dir, seed, all_paths)
+    #         lb_total += lb
+    #     lb_ave = lb_total / 100
+    #     if lb_ave < best_lb:
+    #         best_lb = lb_ave
+    #         best_params = [params]
+    #     elif lb_ave == best_lb:
+    #         best_params.append(params)
 
-    best_params_dict = {idx: params for idx, params in enumerate(best_params)}
-    with open(os.path.join(run_dir, "best_params.json"), "w") as f:
-        json.dump(best_params_dict, f)
+    # best_params_dict = {idx: params for idx, params in enumerate(best_params)}
+    # with open(os.path.join(run_dir, "best_params.json"), "w") as f:
+    #     json.dump(best_params_dict, f)
 
-    return best_params
+    # return best_params
 
 
 def calc_lower_bound(
@@ -247,7 +261,6 @@ def update_result_table(
 
 
 if __name__ == "__main__":
-    setParam("LogToConsole", 0)
-    pause_sync()
+    disconnect_wifi()
     main()
-    resume_sync()
+    connect_wifi()
