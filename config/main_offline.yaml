@@ -4,14 +4,10 @@ defaults:
 
 hydra:
   run:
-    dir: /Users/pivote1214/Library/CloudStorage/GoogleDrive-yuta.m.12.1214@gmail.com/マイドライブ/optical-network/out/${exp_name}/network=${optical_network.name}/selector=${selector.name}/n-paths=${selector.n_paths}
+    dir: out/${exp_name}/network=${optical_network.name}/selector=${selector.name}/n-paths=${selector.n_paths}
   sweep:
-    dir: /Users/pivote1214/Library/CloudStorage/GoogleDrive-yuta.m.12.1214@gmail.com/マイドライブ/optical-network/out/${exp_name}
+    dir: out/${exp_name}
     subdir: network=${optical_network.name}/selector=${selector.name}/n-paths=${selector.n_paths}
-  job_logging:
-    root:
-      level: WARNING
-      handlers: [console, file]
 
 exp_name: 2024-12-19
 
