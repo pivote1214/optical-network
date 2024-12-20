@@ -1,11 +1,15 @@
 import os
 
+__all__ = [
+    "ROOT_DIR",
+    "DATA_DIR",
+    "NETWORK_DIR",
+    "PATHS_DIR",
+    "SRC_DIR",
+]
 
-ROOT_DIR = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
-TEST_DIR = os.path.join(ROOT_DIR, "test")
-DATA_DIR = os.path.join(ROOT_DIR, "data")
+ROOT_DIR    = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
+DATA_DIR    = os.path.join(ROOT_DIR, "data")
+PATHS_DIR   = os.path.join(DATA_DIR, "paths")
 NETWORK_DIR = os.path.join(DATA_DIR, "network")
-GOOGLE_DRIVE_DIR = "/Users/pivote1214/Library/CloudStorage/GoogleDrive-yuta.m.12.1214@gmail.com/マイドライブ/optical-network"
-OUT_DIR = os.path.join(GOOGLE_DRIVE_DIR, "out")
-PATHS_DIR = os.path.join(DATA_DIR, "paths")
-SRC_DIR = os.path.join(ROOT_DIR, "src")
+SRC_DIR     = os.path.join(ROOT_DIR, "src")

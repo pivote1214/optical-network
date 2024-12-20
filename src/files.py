@@ -2,7 +2,7 @@ import os
 import pickle
 from typing import Any
 
-from src.namespaces import OUT_DIR, PATHS_DIR
+from src.namespaces import PATHS_DIR
 
 
 def save_pickle(object: Any, file_path: str) -> None:
@@ -35,36 +35,9 @@ def set_paths_dir(
     params_name.sort()
     paths_dir = os.path.join(
         PATHS_DIR, 
-        path_selector, 
         network_name, 
+        path_selector, 
         *params_name, 
         f"n-paths={n_paths}"
         )
     return paths_dir
-
-
-def set_result_dir(
-    experiment_name: str, 
-    algorithm: str, 
-    network_name: str, 
-    params: Any, 
-    n_paths: int
-    ) -> str:
-    """
-    グラフ上のすべてのパスを保存するディレクトリパスを設定する関数
-
-    Args:
-        algorithm (str): パス選択のアルゴリズム
-        network_name (str): ネットワーク名
-        params (dict[str, any]): アルゴリズムのパラメータ
-        n_paths (int): パス数
-    """
-    params_name = [f"{key}={str(getattr(params, key)).replace('.', 'd')}" 
-                   for key in params.__annotations__ 
-                   if key not in ['timelimit']]
-    result = os.path.join(
-        OUT_DIR, experiment_name, algorithm, network_name, 
-        *params_name, f"n-paths={n_paths}"
-        )
-
-    return result
