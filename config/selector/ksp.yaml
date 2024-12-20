@@ -1,0 +1,5 @@
+name: ksp
+params:
+  length_metric:
+    - hop
+    - physical-length

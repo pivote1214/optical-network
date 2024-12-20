@@ -1,0 +1,50 @@
+defaults:
+  - _self_
+  - selector: ksp
+
+hydra:
+  run:
+    dir: ./out/${exp_name}/network=${optical_network.name}/n-paths=${selector.n_paths}/selector=${selector.name}
+  sweep:
+    dir: ./out/${exp_name}
+    subdir: network=${optical_network.name}/n-paths=${selector.n_paths}/selector=${selector.name}
+
+exp_name: online_ver3
+
+optical_network:
+  name: JPN12
+  num_slots: 320
+  t_bpsk: 50
+  width:
+    optical_carrier: 37.5
+    guard_band: 6.25
+    frequency_slot: 12.5
+  modulation_formats:
+    - [600, 4]
+    - [1200, 3]
+    - [3500, 2]
+    - [6300, 1]
+
+demand:
+  number: 2000
+  population:
+    - 50
+    - 100
+    - 150
+    - 200
+  seed: 4121
+  holding_time_ave: 50
+  erlangs:
+    - 600
+    - 700
+    - 800
+    - 900
+    - 1000
+    - 1100
+    - 1200
+    - 1300
+    - 1400
+    - 1500
+
+selector:
+  n_paths: 3

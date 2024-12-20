@@ -1,0 +1,12 @@
+name: path_clst
+params:
+  length_metric:
+    - hop
+    - physical-length
+  sim_metric:
+    - physical-length
+    - all-one
+  linkage_method:
+    - single
+    - average
+    - complete

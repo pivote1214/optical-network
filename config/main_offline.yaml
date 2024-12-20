@@ -1,0 +1,50 @@
+defaults:
+  - _self_
+  - selector: ksp
+
+hydra:
+  run:
+    dir: /Users/pivote1214/Library/CloudStorage/GoogleDrive-yuta.m.12.1214@gmail.com/マイドライブ/optical-network/out/${exp_name}/network=${optical_network.name}/selector=${selector.name}/n-paths=${selector.n_paths}
+  sweep:
+    dir: /Users/pivote1214/Library/CloudStorage/GoogleDrive-yuta.m.12.1214@gmail.com/マイドライブ/optical-network/out/${exp_name}
+    subdir: network=${optical_network.name}/selector=${selector.name}/n-paths=${selector.n_paths}
+  job_logging:
+    root:
+      level: WARNING
+      handlers: [console, file]
+
+exp_name: 2024-12-19
+
+optical_network:
+  name: JPN12
+  num_slots: 320
+  t_bpsk: 50
+  width:
+    optical_carrier: 37.5
+    guard_band: 6.25
+    frequency_slot: 12.5
+  modulation_formats:
+    - [600, 4]
+    - [1200, 3]
+    - [3500, 2]
+    - [6300, 1]
+
+demand:
+  number: 150
+  population:
+    - 50
+    - 100
+    - 150
+    - 200
+  seed_lb: 408
+  seed_rsa: 1214
+
+optimizer:
+  name: RSA_PATH_CHANNEL
+  timelimit:
+    lower: 60.0
+    upper: 300.0
+    main: 3600.0
+
+selector:
+  n_paths: 3

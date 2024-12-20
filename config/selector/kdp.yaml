@@ -1,0 +1,5 @@
+name: kdp
+params:
+  sim_metric:
+    - physical-length
+    - all-one
